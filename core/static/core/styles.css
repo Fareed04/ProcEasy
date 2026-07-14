@@ -1,0 +1,159 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+/* Container */
+body {
+    background: #f7f9fc;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Heading */
+.container h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+}
+
+/* Form */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.file-label {
+    font-weight: 600;
+}
+
+input[type="file"] {
+    padding: 0.5rem;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: #fafafa;
+    cursor: pointer;
+}
+
+button {
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    background: #3498db;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+/* Output Box */
+.output-box {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f4f6f8;
+    border-left: 4px solid #3498db;
+    border-radius: 8px;
+}
+
+.output-box h2 {
+    margin-bottom: 1rem;
+    color: #34495e;
+}
+
+.output-box pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: monospace;
+    font-size: 0.95rem;
+    color: #2c3e50;
+    background: #eef2f6;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+/* Tables */
+.output-box table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+
+.output-box th,
+.output-box td {
+    border: 1px solid #dcdfe3;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.output-box th {
+    background: #ecf0f3;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.output-box td {
+    background: #fff;
+    color: #333;
+}
+
+/* Highlight totals */
+.output-box tr:last-child td {
+    font-weight: 600;
+    color: #27ae60;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+    button {
+        font-size: 0.9rem;
+        padding: 0.6rem;
+    }
+    .output-box table,
+    .output-box th,
+    .output-box td {
+        font-size: 0.85rem;
+    }
+}
+/* Toggle Button */
+.toggle-btn {
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    background: #3498db;
+    color: white;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: #2980b9;
+}

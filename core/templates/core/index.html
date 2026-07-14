@@ -1,0 +1,227 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Text Extractor</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Text Extractor</h1>
+        
+        <!-- File Upload Form -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="pdf_file" class="file-label">Choose a PDF</label>
+            <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
+            <button type="submit">Extract Text</button>
+        </form>
+        
+        {% if extracted_text or parsed_data %}
+        <!-- Toggle Button -->
+        <button class="toggle-btn" onclick="toggleView()">Toggle View</button>
+        {% endif %}
+
+        <!-- Raw Text Output -->
+        {% if extracted_text %}
+        <div id="raw-output" class="output-box">
+            <h2>Extracted Text</h2>
+            <pre>{{ extracted_text }}</pre>
+        </div>
+        {% endif %}
+
+        <!-- Parsed Structured Data -->
+        {% if parsed_data %}
+        <div id="parsed-output" class="output-box hidden">
+            <h2>Parsed Invoice Data</h2>
+            
+            <table>
+                <tbody>
+                    {% if parsed_data.vendor %}
+                    <tr><th>Vendor</th><td>{{ parsed_data.vendor }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.invoice_number %}
+                    <tr><th>Invoice Number</th><td>{{ parsed_data.invoice_number }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.date %}
+                    <tr><th>Date</th><td>{{ parsed_data.date }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.payment_terms %}
+                    <tr><th>Payment Terms</th><td>{{ parsed_data.payment_terms }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.total %}
+                    <tr><th>Total</th><td>{{ parsed_data.total }}</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <!-- Items Section -->
+            {% if parsed_data.items %}
+            <h3>Items</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in parsed_data.items %}
+                    <tr>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleView() {
+            const raw = document.getElementById("raw-output");
+            const parsed = document.getElementById("parsed-output");
+            raw.classList.toggle("hidden");
+            parsed.classList.toggle("hidden");
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+{% comment %} {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Text Extractor</title>
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+    <style>
+        .hidden { display: none; }
+        .toggle-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+        .toggle-btn:hover {
+            background: #2980b9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        th {
+            background: #f4f6f8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Text Extractor</h1>
+        
+        <!-- File Upload Form -->
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="pdf_file" class="file-label">Choose a PDF</label>
+            <input type="file" id="pdf_file" name="pdf_file" accept="application/pdf" required>
+            <button type="submit">Extract Text</button>
+        </form>
+        
+        {% if extracted_text or parsed_data %}
+        <!-- Toggle Button -->
+        <button class="toggle-btn" onclick="toggleView()">Toggle View</button>
+        {% endif %}
+
+        <!-- Raw Text Output -->
+        {% if extracted_text %}
+        <div id="raw-output" class="output-box">
+            <h2>Extracted Text</h2>
+            <pre>{{ extracted_text }}</pre>
+        </div>
+        {% endif %}
+
+        <!-- Parsed Structured Data -->
+        {% if parsed_data %}
+        <div id="parsed-output" class="output-box hidden">
+            <h2>Parsed Invoice Data</h2>
+            
+            <table>
+                <tbody>
+                    {% if parsed_data.vendor %}
+                    <tr><th>Vendor</th><td>{{ parsed_data.vendor }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.invoice_number %}
+                    <tr><th>Invoice Number</th><td>{{ parsed_data.invoice_number }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.date %}
+                    <tr><th>Date</th><td>{{ parsed_data.date }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.payment_terms %}
+                    <tr><th>Payment Terms</th><td>{{ parsed_data.payment_terms }}</td></tr>
+                    {% endif %}
+                    {% if parsed_data.total %}
+                    <tr><th>Total</th><td>{{ parsed_data.total }}</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            <!-- Items Section -->
+            {% if parsed_data.items %}
+            <h3>Items</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in parsed_data.items %}
+                    <tr>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleView() {
+            const raw = document.getElementById("raw-output");
+            const parsed = document.getElementById("parsed-output");
+            raw.classList.toggle("hidden");
+            parsed.classList.toggle("hidden");
+        }
+    </script>
+</body>
+</html> {% endcomment %}
