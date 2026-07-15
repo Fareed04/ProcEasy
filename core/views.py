@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.core.files.storage import default_storage
-from .utils import extract_text_from_pdf
-from .parser import parse_invoice_text  # import the parser
+from .extraction.utils import extract_text_from_pdf
+from .parsing.parser import parse_invoice_text  # import the parser
 
 
 def pdf_upload(request):
