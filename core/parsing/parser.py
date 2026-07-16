@@ -1,6 +1,7 @@
 import re
 import json
 from .schema import empty_invoice, empty_item
+from . import patterns
 
 
 def parse_invoice_text(text: str) -> dict:
@@ -10,41 +11,41 @@ def parse_invoice_text(text: str) -> dict:
 
     invoice_data = empty_invoice()
 
-    # Regex patterns
-    vendor_match = re.search(r"Vendor\s*[:\-]?\s*(.+)", text, re.IGNORECASE)
+    # Field extraction
+    vendor_match = re.search(patterns.VENDOR, text, re.IGNORECASE)
 
     invoice_number_match = re.search(
-        r"(?:Invoice\s*(?:No\.?|Number)?\s*[:\-]?\s*|INV[-\s]*)\s*([\w\-\/]+)",
+        patterns.INVOICE_NUMBER,
         text,
         re.IGNORECASE,
     )
 
     date_match = re.search(
-        r"(?:Invoice\s*Date|Date)\s*[:\-]?\s*(\d{1,2}[\/\-\.\s]\d{1,2}[\/\-\.\s]\d{2,4})",
+        patterns.DATE,
         text,
         re.IGNORECASE,
     )
 
     subtotal_match = re.search(
-        r"Subtotal\s*[:\-]?\s*([\d,]+\.\d{2})",
+        patterns.SUBTOTAL,
         text,
         re.IGNORECASE,
     )
 
     tax_match = re.search(
-        r"(Tax|VAT)\s*[:\-]?\s*([\d,]+\.\d{2})",
+        patterns.TAX,
         text,
         re.IGNORECASE,
     )
 
     total_match = re.search(
-        r"(Total|Grand\s*Total|Amount\s*Due)\s*[:\-]?\s*([\d,]+\.\d{2})",
+        patterns.TOTAL,
         text,
         re.IGNORECASE,
     )
 
     payment_terms_match = re.search(
-        r"(Net\s*\d+\s*days|Due\s*on\s*receipt)",
+        patterns.PAYMENT_TERMS,
         text,
         re.IGNORECASE,
     )
@@ -79,7 +80,7 @@ def parse_invoice_text(text: str) -> dict:
         line = line.strip()
 
         item_match = re.match(
-            r"(.+?)\s+(\d+)\s+([\d,]+\.\d{2})(?:\s+([\d,]+\.\d{2}))?",
+            patterns.ITEM,
             line,
         )
 
