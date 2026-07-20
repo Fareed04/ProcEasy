@@ -1,6 +1,6 @@
 import re
 import json
-from .schema import empty_invoice, empty_item
+from ..schema import empty_invoice, empty_item
 from . import patterns
 
 
