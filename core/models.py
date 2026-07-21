@@ -8,6 +8,8 @@ class InvoiceRecord(models.Model):
     parsed_data = models.JSONField()
 
     verified = models.BooleanField(default=False)
+    
+    verified_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

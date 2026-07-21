@@ -1,10 +1,32 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.files.storage import default_storage
 
 from .models import InvoiceRecord
 from .extraction.utils import extract_text_from_pdf
 from .parsing.parser import parse_invoice_text
+from django.utils import timezone
+import json
 
+
+def verify_invoice(request, pk):
+    invoice = get_object_or_404(InvoiceRecord, pk=pk)
+
+    if request.method == "POST":
+        invoice.parsed_data = json.loads(request.POST["parsed_data"])
+        invoice.verified = True
+        invoice.verified_at = timezone.now()
+        invoice.save()
+
+        return redirect("verify_invoice", pk=invoice.pk)
+
+    return render(
+        request,
+        "core/verify.html",
+        {
+            "invoice": invoice,
+            "parsed_json": json.dumps(invoice.parsed_data, indent=4),
+        },
+    )
 
 def pdf_upload(request):
     extracted_text = None
