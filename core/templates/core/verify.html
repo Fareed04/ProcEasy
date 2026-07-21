@@ -1,0 +1,70 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verify Invoice | ProcEasy</title>
+
+    <link rel="stylesheet" href="{% static 'core/styles.css' %}">
+</head>
+
+<body>
+
+<div class="verification-container">
+
+    <h1>Invoice Verification</h1>
+
+    <div class="verification-grid">
+
+        <!-- LEFT: EXTRACTED TEXT -->
+        <section class="verification-card">
+
+            <h2>Extracted Invoice Text</h2>
+
+            <div class="extracted-text">
+                <pre>{{ invoice.extracted_text }}</pre>
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT: PARSED DATA -->
+        <section class="verification-card">
+
+            <h2>Parsed Invoice Data</h2>
+
+            <p class="instruction">
+                Review and correct the extracted data before verifying.
+            </p>
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <textarea
+                    name="parsed_data"
+                    class="json-editor"
+                    spellcheck="false"
+                >{{ parsed_json }}</textarea>
+
+                <button
+                    type="submit"
+                    class="verify-button"
+                >
+                    Mark as Verified
+                </button>
+
+            </form>
+
+        </section>
+
+    </div>
+
+</div>
+
+</body>
+</html>
