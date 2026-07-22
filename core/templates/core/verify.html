@@ -32,24 +32,232 @@
         </section>
 
 
-        <!-- RIGHT: PARSED DATA -->
+        <!-- RIGHT: STRUCTURED DATA -->
         <section class="verification-card">
 
-            <h2>Parsed Invoice Data</h2>
+            <h2>Invoice Data</h2>
 
             <p class="instruction">
-                Review and correct the extracted data before verifying.
+                Review the extracted information and correct any errors before saving.
             </p>
 
             <form method="POST">
 
                 {% csrf_token %}
 
-                <textarea
-                    name="parsed_data"
-                    class="json-editor"
-                    spellcheck="false"
-                >{{ parsed_json }}</textarea>
+                <!-- INVOICE INFORMATION -->
+
+                <div class="form-section">
+
+                    <h3>Invoice Information</h3>
+
+                    <div class="form-group">
+                        <label for="vendor">Vendor</label>
+                        <input
+                            type="text"
+                            id="vendor"
+                            name="vendor"
+                            value="{{ invoice_data.invoice.vendor }}"
+                        >
+                    </div>
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label for="currency">Currency</label>
+
+                            <select id="currency" name="currency">
+                                <option value="">Select Currency</option>
+                                <option value="NGN">NGN</option>
+                                <option value="USD">USD</option>
+                                <option value="GBP">GBP</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="payment_terms">Payment Terms</label>
+
+                            <input
+                                type="text"
+                                id="payment_terms"
+                                name="payment_terms"
+                                value="{{ invoice_data.invoice.payment_terms }}"
+                            >
+                        </div>
+
+                    </div>
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+                            <label for="subtotal">Subtotal</label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                id="subtotal"
+                                name="subtotal"
+                                value="{{ invoice_data.invoice.subtotal }}"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tax">Tax</label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                id="tax"
+                                name="tax"
+                                value="{{ invoice_data.invoice.tax }}"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="grand_total">Grand Total</label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                id="grand_total"
+                                name="grand_total"
+                                value="{{ invoice_data.invoice.grand_total }}"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ITEMS -->
+
+                <div class="form-section">
+
+                    <div class="section-header">
+
+                        <h3>Invoice Items</h3>
+
+                        <button
+                            type="button"
+                            id="add-item"
+                            class="add-item-button"
+                        >
+                            + Add Item
+                        </button>
+
+                    </div>
+
+
+                    <div id="items-container">
+
+                        {% for item in invoice_data.items %}
+
+                        <div class="item-row">
+
+                            <div class="form-group">
+                                <label>Item Name</label>
+
+                                <input
+                                    type="text"
+                                    name="item_name[]"
+                                    value="{{ item.item_name }}"
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description</label>
+
+                                <input
+                                    type="text"
+                                    name="item_description[]"
+                                    value="{{ item.description }}"
+                                >
+                            </div>
+
+                            <div class="form-group small-field">
+                                <label>Quantity</label>
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    name="item_quantity[]"
+                                    value="{{ item.quantity }}"
+                                >
+                            </div>
+
+                            <div class="form-group small-field">
+                                <label>Unit Price</label>
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    name="item_unit_price[]"
+                                    value="{{ item.unit_price }}"
+                                >
+                            </div>
+
+                            <div class="form-group small-field">
+                                <label>Line Total</label>
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    name="item_line_total[]"
+                                    value="{{ item.line_total }}"
+                                >
+                            </div>
+
+                            <button
+                                type="button"
+                                class="remove-item-button"
+                            >
+                                Remove
+                            </button>
+
+                        </div>
+
+                        {% empty %}
+
+                        <!-- Empty item row -->
+                        <div class="item-row">
+
+                            <div class="form-group">
+                                <label>Item Name</label>
+                                <input type="text" name="item_name[]">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" name="item_description[]">
+                            </div>
+
+                            <div class="form-group small-field">
+                                <label>Quantity</label>
+                                <input type="number" step="0.01" name="item_quantity[]">
+                            </div>
+
+                            <div class="form-group small-field">
+                                <label>Unit Price</label>
+                                <input type="number" step="0.01" name="item_unit_price[]">
+                            </div>
+
+                            <div class="form-group small-field">
+                                <label>Line Total</label>
+                                <input type="number" step="0.01" name="item_line_total[]">
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- SAVE -->
 
                 <button
                     type="submit"
@@ -65,6 +273,72 @@
     </div>
 
 </div>
+
+
+<!-- ADD / REMOVE ITEMS -->
+
+<script>
+
+const itemsContainer = document.getElementById("items-container");
+const addItemButton = document.getElementById("add-item");
+
+
+addItemButton.addEventListener("click", function () {
+
+    const itemRow = document.createElement("div");
+
+    itemRow.className = "item-row";
+
+    itemRow.innerHTML = `
+        <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" name="item_name[]">
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <input type="text" name="item_description[]">
+        </div>
+
+        <div class="form-group small-field">
+            <label>Quantity</label>
+            <input type="number" step="0.01" name="item_quantity[]">
+        </div>
+
+        <div class="form-group small-field">
+            <label>Unit Price</label>
+            <input type="number" step="0.01" name="item_unit_price[]">
+        </div>
+
+        <div class="form-group small-field">
+            <label>Line Total</label>
+            <input type="number" step="0.01" name="item_line_total[]">
+        </div>
+
+        <button
+            type="button"
+            class="remove-item-button"
+        >
+            Remove
+        </button>
+    `;
+
+    itemsContainer.appendChild(itemRow);
+
+});
+
+
+itemsContainer.addEventListener("click", function (event) {
+
+    if (event.target.classList.contains("remove-item-button")) {
+
+        event.target.closest(".item-row").remove();
+
+    }
+
+});
+
+</script>
 
 </body>
 </html>
