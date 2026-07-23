@@ -12,7 +12,11 @@ class InvoiceRecord(models.Model):
     verified_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
+    
     def __str__(self):
-        invoice_number = self.parsed_data.get("invoice", {}).get("invoice_number", "Unknown")
-        return invoice_number
+        vendor = self.parsed_data.get("invoice", {}).get("vendor")
+
+        if vendor:
+            return vendor
+        
+        return f"Invoice Record #{self.id}"
