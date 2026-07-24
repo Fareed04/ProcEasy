@@ -38,100 +38,244 @@
             <h2>Invoice Data</h2>
 
             <p class="instruction">
-                Review the extracted information and correct any errors before saving.
+                Review and correct the extracted information before saving.
             </p>
 
-            <form method="POST">
+            <form method="POST" id="invoice-form">
 
                 {% csrf_token %}
 
+                <!-- ========================= -->
                 <!-- INVOICE INFORMATION -->
+                <!-- ========================= -->
 
                 <div class="form-section">
 
                     <h3>Invoice Information</h3>
 
+                    <!-- Vendor -->
                     <div class="form-group">
                         <label for="vendor">Vendor</label>
+
                         <input
                             type="text"
                             id="vendor"
                             name="vendor"
-                            value="{{ invoice_data.invoice.vendor }}"
+                            value="{{ invoice_data.invoice.vendor|default:'' }}"
+                            required
                         >
                     </div>
 
+
+                    <!-- Currency -->
                     <div class="form-row">
 
                         <div class="form-group">
+
                             <label for="currency">Currency</label>
 
-                            <select id="currency" name="currency">
+                            <select
+                                id="currency"
+                                name="currency"
+                                required
+                            >
+
                                 <option value="">Select Currency</option>
-                                <option value="NGN">NGN</option>
-                                <option value="USD">USD</option>
-                                <option value="GBP">GBP</option>
-                                <option value="EUR">EUR</option>
+
+                                <option value="NGN"
+                                    {% if invoice_data.invoice.currency == "NGN" %}selected{% endif %}>
+                                    NGN
+                                </option>
+
+                                <option value="USD"
+                                    {% if invoice_data.invoice.currency == "USD" %}selected{% endif %}>
+                                    USD
+                                </option>
+
+                                <option value="GBP"
+                                    {% if invoice_data.invoice.currency == "GBP" %}selected{% endif %}>
+                                    GBP
+                                </option>
+
+                                <option value="EUR"
+                                    {% if invoice_data.invoice.currency == "EUR" %}selected{% endif %}>
+                                    EUR
+                                </option>
+
                             </select>
+
                         </div>
 
-                        <div class="form-group">
-                            <label for="payment_terms">Payment Terms</label>
 
-                            <input
-                                type="text"
-                                id="payment_terms"
-                                name="payment_terms"
-                                value="{{ invoice_data.invoice.payment_terms }}"
+                        <!-- Payment Terms Summary -->
+                        <div class="form-group">
+
+                            <label>Payment Terms Total</label>
+
+                            <div
+                                id="payment-total-display"
+                                class="payment-total-display"
                             >
+                                0%
+                            </div>
+
                         </div>
 
                     </div>
 
+
+                    <!-- Subtotal / Tax / Grand Total -->
+
                     <div class="form-row">
 
                         <div class="form-group">
-                            <label for="subtotal">Subtotal</label>
+
+                            <label for="subtotal">
+                                Subtotal
+                            </label>
 
                             <input
                                 type="number"
                                 step="0.01"
+                                min="0"
                                 id="subtotal"
                                 name="subtotal"
-                                value="{{ invoice_data.invoice.subtotal }}"
+                                value="{{ invoice_data.invoice.subtotal|default:'' }}"
                             >
+
                         </div>
 
-                        <div class="form-group">
-                            <label for="tax">Tax</label>
 
-                            <input
-                                type="number"
-                                step="0.01"
+                        <div class="form-group">
+
+                            <label for="tax">
+                                Tax
+                            </label>
+
+                            <select
                                 id="tax"
                                 name="tax"
-                                value="{{ invoice_data.invoice.tax }}"
                             >
+
+                                <option value="">Select Tax</option>
+
+                                <option value="N/A"
+                                    {% if invoice_data.invoice.tax == "N/A" %}selected{% endif %}>
+                                    N/A
+                                </option>
+
+                                <option value="Inclusive"
+                                    {% if invoice_data.invoice.tax == "Inclusive" %}selected{% endif %}>
+                                    Inclusive
+                                </option>
+
+                                <option value="Exclusive"
+                                    {% if invoice_data.invoice.tax == "Exclusive" %}selected{% endif %}>
+                                    Exclusive
+                                </option>
+
+                            </select>
+
                         </div>
+
 
                         <div class="form-group">
-                            <label for="grand_total">Grand Total</label>
 
-                            <input
-                                type="number"
-                                step="0.01"
-                                id="grand_total"
-                                name="grand_total"
-                                value="{{ invoice_data.invoice.grand_total }}"
+                            <label for="tax_group">
+                                Tax Group
+                            </label>
+
+                            <select
+                                id="tax_group"
+                                name="tax_group"
                             >
+
+                                <option value="">
+                                    Select Tax Group
+                                </option>
+
+                                <option value="VAT 0% - FIRS">
+                                    VAT 0% - FIRS
+                                </option>
+
+                                <option value="VAT 7.5% - FIRS">
+                                    VAT 7.5% - FIRS
+                                </option>
+
+                                <option value="VAT 5% - FIRS">
+                                    VAT 5% - FIRS
+                                </option>
+
+                            </select>
+
                         </div>
+
+                    </div>
+
+
+                    <!-- WHT -->
+
+                    <div class="form-group">
+
+                        <label for="wht">
+                            WHT
+                        </label>
+
+                        <select
+                            id="wht"
+                            name="wht"
+                        >
+
+                            <option value="">
+                                Select WHT
+                            </option>
+
+                            <option value="WHT-FIRS-2%">
+                                WHT-FIRS-2%
+                            </option>
+
+                            <option value="WHT-FIRS-5%">
+                                WHT-FIRS-5%
+                            </option>
+
+                            <option value="WHT-FIRS-10%">
+                                WHT-FIRS-10%
+                            </option>
+
+                            <option value="WHT-FIRS-15%">
+                                WHT-FIRS-15%
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Grand Total -->
+
+                    <div class="form-group">
+
+                        <label for="grand_total">
+                            Grand Total
+                        </label>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            id="grand_total"
+                            name="grand_total"
+                            value="{{ invoice_data.invoice.grand_total|default:'' }}"
+                        >
 
                     </div>
 
                 </div>
 
 
+                <!-- ========================= -->
                 <!-- ITEMS -->
+                <!-- ========================= -->
 
                 <div class="form-section">
 
@@ -157,57 +301,84 @@
                         <div class="item-row">
 
                             <div class="form-group">
+
                                 <label>Item Name</label>
 
                                 <input
                                     type="text"
                                     name="item_name[]"
-                                    value="{{ item.item_name }}"
+                                    class="item-name"
+                                    value="{{ item.item_name|default:'' }}"
+                                    required
                                 >
+
                             </div>
 
+
                             <div class="form-group">
+
                                 <label>Description</label>
 
                                 <input
                                     type="text"
                                     name="item_description[]"
-                                    value="{{ item.description }}"
+                                    class="item-description"
+                                    value="{{ item.description|default:'' }}"
                                 >
+
                             </div>
 
+
                             <div class="form-group small-field">
+
                                 <label>Quantity</label>
 
                                 <input
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     name="item_quantity[]"
-                                    value="{{ item.quantity }}"
+                                    class="item-quantity"
+                                    value="{{ item.quantity|default:'' }}"
+                                    required
                                 >
+
                             </div>
 
+
                             <div class="form-group small-field">
+
                                 <label>Unit Price</label>
 
                                 <input
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     name="item_unit_price[]"
-                                    value="{{ item.unit_price }}"
+                                    class="item-unit-price"
+                                    value="{{ item.unit_price|default:'' }}"
+                                    required
                                 >
+
                             </div>
 
+
                             <div class="form-group small-field">
+
                                 <label>Line Total</label>
 
                                 <input
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     name="item_line_total[]"
-                                    value="{{ item.line_total }}"
+                                    class="item-line-total"
+                                    value="{{ item.line_total|default:'' }}"
+                                    readonly
                                 >
+
                             </div>
+
 
                             <button
                                 type="button"
@@ -220,32 +391,79 @@
 
                         {% empty %}
 
-                        <!-- Empty item row -->
                         <div class="item-row">
 
                             <div class="form-group">
+
                                 <label>Item Name</label>
-                                <input type="text" name="item_name[]">
+
+                                <input
+                                    type="text"
+                                    name="item_name[]"
+                                    class="item-name"
+                                    required
+                                >
+
                             </div>
+
 
                             <div class="form-group">
+
                                 <label>Description</label>
-                                <input type="text" name="item_description[]">
+
+                                <input
+                                    type="text"
+                                    name="item_description[]"
+                                    class="item-description"
+                                >
+
                             </div>
 
+
                             <div class="form-group small-field">
+
                                 <label>Quantity</label>
-                                <input type="number" step="0.01" name="item_quantity[]">
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="item_quantity[]"
+                                    class="item-quantity"
+                                    required
+                                >
+
                             </div>
 
+
                             <div class="form-group small-field">
+
                                 <label>Unit Price</label>
-                                <input type="number" step="0.01" name="item_unit_price[]">
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="item_unit_price[]"
+                                    class="item-unit-price"
+                                    required
+                                >
+
                             </div>
 
+
                             <div class="form-group small-field">
+
                                 <label>Line Total</label>
-                                <input type="number" step="0.01" name="item_line_total[]">
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    name="item_line_total[]"
+                                    class="item-line-total"
+                                    readonly
+                                >
+
                             </div>
 
                         </div>
@@ -257,7 +475,110 @@
                 </div>
 
 
+                <!-- ========================= -->
+                <!-- PAYMENT TERMS -->
+                <!-- ========================= -->
+
+                <div class="form-section">
+
+                    <div class="section-header">
+
+                        <h3>Payment Terms</h3>
+
+                        <button
+                            type="button"
+                            id="add-payment-term"
+                            class="add-item-button"
+                        >
+                            + Add Payment Term
+                        </button>
+
+                    </div>
+
+
+                    <div id="payment-terms-container">
+
+                        <!-- First payment term -->
+
+                        <div class="payment-term-row">
+
+                            <div class="form-group">
+
+                                <label>
+                                    Type
+                                </label>
+
+                                <select
+                                    name="payment_term_type[]"
+                                    class="payment-term-type"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select Type
+                                    </option>
+
+                                    <option value="Advance payment">
+                                        Advance payment
+                                    </option>
+
+                                    <option value="On GR/SC">
+                                        On GR/SC
+                                    </option>
+
+                                    <option value="On Invoice">
+                                        On Invoice
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Payment %
+                                </label>
+
+                                <input
+                                    type="number"
+                                    name="payment_term_percentage[]"
+                                    class="payment-term-percentage"
+                                    min="1"
+                                    max="100"
+                                    step="1"
+                                    placeholder="Select Type first"
+                                    disabled
+                                    required
+                                >
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="remove-payment-term-button"
+                            >
+                                Remove
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        id="payment-error"
+                        class="form-error"
+                    ></div>
+
+                </div>
+
+
+                <!-- ========================= -->
                 <!-- SAVE -->
+                <!-- ========================= -->
 
                 <button
                     type="submit"
@@ -275,70 +596,578 @@
 </div>
 
 
-<!-- ADD / REMOVE ITEMS -->
-
 <script>
 
-const itemsContainer = document.getElementById("items-container");
-const addItemButton = document.getElementById("add-item");
+/* ================================= */
+/* ITEM FUNCTIONS */
+/* ================================= */
+
+const itemsContainer =
+    document.getElementById("items-container");
+
+const addItemButton =
+    document.getElementById("add-item");
 
 
-addItemButton.addEventListener("click", function () {
+function updateItemDescription(row) {
 
-    const itemRow = document.createElement("div");
+    const itemName =
+        row.querySelector(".item-name");
 
-    itemRow.className = "item-row";
+    const description =
+        row.querySelector(".item-description");
 
-    itemRow.innerHTML = `
-        <div class="form-group">
-            <label>Item Name</label>
-            <input type="text" name="item_name[]">
-        </div>
+    if (itemName.value.trim()) {
 
-        <div class="form-group">
-            <label>Description</label>
-            <input type="text" name="item_description[]">
-        </div>
-
-        <div class="form-group small-field">
-            <label>Quantity</label>
-            <input type="number" step="0.01" name="item_quantity[]">
-        </div>
-
-        <div class="form-group small-field">
-            <label>Unit Price</label>
-            <input type="number" step="0.01" name="item_unit_price[]">
-        </div>
-
-        <div class="form-group small-field">
-            <label>Line Total</label>
-            <input type="number" step="0.01" name="item_line_total[]">
-        </div>
-
-        <button
-            type="button"
-            class="remove-item-button"
-        >
-            Remove
-        </button>
-    `;
-
-    itemsContainer.appendChild(itemRow);
-
-});
-
-
-itemsContainer.addEventListener("click", function (event) {
-
-    if (event.target.classList.contains("remove-item-button")) {
-
-        event.target.closest(".item-row").remove();
+        description.value =
+            "This is for the purchase of " +
+            itemName.value.trim();
 
     }
 
-});
+}
+
+
+function calculateLineTotal(row) {
+
+    const quantity =
+        parseFloat(
+            row.querySelector(".item-quantity").value
+        ) || 0;
+
+    const unitPrice =
+        parseFloat(
+            row.querySelector(".item-unit-price").value
+        ) || 0;
+
+    const lineTotal =
+        row.querySelector(".item-line-total");
+
+    lineTotal.value =
+        (quantity * unitPrice).toFixed(2);
+
+}
+
+
+function setupItemRow(row) {
+
+    const itemName =
+        row.querySelector(".item-name");
+
+    const quantity =
+        row.querySelector(".item-quantity");
+
+    const unitPrice =
+        row.querySelector(".item-unit-price");
+
+
+    itemName.addEventListener(
+        "input",
+        function () {
+
+            updateItemDescription(row);
+
+        }
+    );
+
+
+    quantity.addEventListener(
+        "input",
+        function () {
+
+            calculateLineTotal(row);
+
+        }
+    );
+
+
+    unitPrice.addEventListener(
+        "input",
+        function () {
+
+            calculateLineTotal(row);
+
+        }
+    );
+
+}
+
+
+document
+    .querySelectorAll(".item-row")
+    .forEach(setupItemRow);
+
+
+addItemButton.addEventListener(
+    "click",
+    function () {
+
+        const itemRow =
+            document.createElement("div");
+
+        itemRow.className =
+            "item-row";
+
+        itemRow.innerHTML = `
+
+            <div class="form-group">
+
+                <label>Item Name</label>
+
+                <input
+                    type="text"
+                    name="item_name[]"
+                    class="item-name"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Description</label>
+
+                <input
+                    type="text"
+                    name="item_description[]"
+                    class="item-description"
+                >
+
+            </div>
+
+
+            <div class="form-group small-field">
+
+                <label>Quantity</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="item_quantity[]"
+                    class="item-quantity"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group small-field">
+
+                <label>Unit Price</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    name="item_unit_price[]"
+                    class="item-unit-price"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group small-field">
+
+                <label>Line Total</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    name="item_line_total[]"
+                    class="item-line-total"
+                    readonly
+                >
+
+            </div>
+
+
+            <button
+                type="button"
+                class="remove-item-button"
+            >
+                Remove
+            </button>
+
+        `;
+
+
+        itemsContainer.appendChild(itemRow);
+
+        setupItemRow(itemRow);
+
+    }
+);
+
+
+itemsContainer.addEventListener(
+    "click",
+    function (event) {
+
+        if (
+            event.target.classList.contains(
+                "remove-item-button"
+            )
+        ) {
+
+            const rows =
+                itemsContainer.querySelectorAll(
+                    ".item-row"
+                );
+
+            if (rows.length > 1) {
+
+                event.target
+                    .closest(".item-row")
+                    .remove();
+
+            }
+
+        }
+
+    }
+);
+
+
+/* ================================= */
+/* PAYMENT TERM FUNCTIONS */
+/* ================================= */
+
+const paymentTermsContainer =
+    document.getElementById(
+        "payment-terms-container"
+    );
+
+const addPaymentTermButton =
+    document.getElementById(
+        "add-payment-term"
+    );
+
+const paymentTotalDisplay =
+    document.getElementById(
+        "payment-total-display"
+    );
+
+const paymentError =
+    document.getElementById(
+        "payment-error"
+    );
+
+
+function updatePaymentPercentageState(row) {
+
+    const type =
+        row.querySelector(
+            ".payment-term-type"
+        );
+
+    const percentage =
+        row.querySelector(
+            ".payment-term-percentage"
+        );
+
+
+    if (type.value) {
+
+        percentage.disabled = false;
+
+        percentage.placeholder =
+            "Enter percentage";
+
+    } else {
+
+        percentage.disabled = true;
+
+        percentage.value = "";
+
+        percentage.placeholder =
+            "Select Type first";
+
+    }
+
+}
+
+
+function updatePaymentTotal() {
+
+    let total = 0;
+
+    document
+        .querySelectorAll(
+            ".payment-term-percentage"
+        )
+        .forEach(
+            function (input) {
+
+                total +=
+                    parseFloat(input.value) || 0;
+
+            }
+        );
+
+
+    paymentTotalDisplay.textContent =
+        total + "%";
+
+
+    if (total === 100) {
+
+        paymentTotalDisplay.classList.add(
+            "payment-total-valid"
+        );
+
+        paymentTotalDisplay.classList.remove(
+            "payment-total-invalid"
+        );
+
+    } else {
+
+        paymentTotalDisplay.classList.add(
+            "payment-total-invalid"
+        );
+
+        paymentTotalDisplay.classList.remove(
+            "payment-total-valid"
+        );
+
+    }
+
+}
+
+
+function setupPaymentTermRow(row) {
+
+    const type =
+        row.querySelector(
+            ".payment-term-type"
+        );
+
+    const percentage =
+        row.querySelector(
+            ".payment-term-percentage"
+        );
+
+
+    type.addEventListener(
+        "change",
+        function () {
+
+            updatePaymentPercentageState(row);
+
+        }
+    );
+
+
+    percentage.addEventListener(
+        "input",
+        function () {
+
+            updatePaymentTotal();
+
+        }
+    );
+
+}
+
+
+document
+    .querySelectorAll(
+        ".payment-term-row"
+    )
+    .forEach(
+        setupPaymentTermRow
+    );
+
+
+addPaymentTermButton.addEventListener(
+    "click",
+    function () {
+
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "payment-term-row";
+
+
+        row.innerHTML = `
+
+            <div class="form-group">
+
+                <label>
+                    Type
+                </label>
+
+                <select
+                    name="payment_term_type[]"
+                    class="payment-term-type"
+                    required
+                >
+
+                    <option value="">
+                        Select Type
+                    </option>
+
+                    <option value="Advance payment">
+                        Advance payment
+                    </option>
+
+                    <option value="On GR/SC">
+                        On GR/SC
+                    </option>
+
+                    <option value="On Invoice">
+                        On Invoice
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Payment %
+                </label>
+
+                <input
+                    type="number"
+                    name="payment_term_percentage[]"
+                    class="payment-term-percentage"
+                    min="1"
+                    max="100"
+                    step="1"
+                    placeholder="Select Type first"
+                    disabled
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="button"
+                class="remove-payment-term-button"
+            >
+                Remove
+            </button>
+
+        `;
+
+
+        paymentTermsContainer.appendChild(row);
+
+        setupPaymentTermRow(row);
+
+    }
+);
+
+
+paymentTermsContainer.addEventListener(
+    "click",
+    function (event) {
+
+        if (
+            event.target.classList.contains(
+                "remove-payment-term-button"
+            )
+        ) {
+
+            const rows =
+                paymentTermsContainer.querySelectorAll(
+                    ".payment-term-row"
+                );
+
+
+            if (rows.length > 1) {
+
+                event.target
+                    .closest(
+                        ".payment-term-row"
+                    )
+                    .remove();
+
+                updatePaymentTotal();
+
+            }
+
+        }
+
+    }
+);
+
+
+/* ================================= */
+/* FORM VALIDATION */
+/* ================================= */
+
+document
+    .getElementById("invoice-form")
+    .addEventListener(
+        "submit",
+        function (event) {
+
+            let paymentTotal = 0;
+
+            document
+                .querySelectorAll(
+                    ".payment-term-percentage"
+                )
+                .forEach(
+                    function (input) {
+
+                        paymentTotal +=
+                            parseFloat(
+                                input.value
+                            ) || 0;
+
+                    }
+                );
+
+
+            if (paymentTotal !== 100) {
+
+                event.preventDefault();
+
+                paymentError.textContent =
+                    "Payment terms must add up to exactly 100%.";
+
+                paymentError.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                return;
+
+            }
+
+
+            paymentError.textContent = "";
+
+        }
+    );
+
+
+/* Initial calculation */
+
+document
+    .querySelectorAll(".item-row")
+    .forEach(
+        function (row) {
+
+            calculateLineTotal(row);
+
+        }
+    );
+
+
+updatePaymentTotal();
 
 </script>
 
 </body>
+
 </html>
