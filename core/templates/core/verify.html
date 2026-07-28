@@ -20,8 +20,11 @@
 
     <div class="verification-grid">
 
-        <!-- LEFT: EXTRACTED TEXT -->
-        <section class="verification-card">
+        <!-- ========================= -->
+        <!-- EXTRACTED TEXT -->
+        <!-- ========================= -->
+
+        <section class="verification-card extracted-card">
 
             <h2>Extracted Invoice Text</h2>
 
@@ -32,7 +35,10 @@
         </section>
 
 
-        <!-- RIGHT: STRUCTURED DATA -->
+        <!-- ========================= -->
+        <!-- INVOICE DATA -->
+        <!-- ========================= -->
+
         <section class="verification-card">
 
             <h2>Invoice Data</h2>
@@ -45,6 +51,7 @@
 
                 {% csrf_token %}
 
+
                 <!-- ========================= -->
                 <!-- INVOICE INFORMATION -->
                 <!-- ========================= -->
@@ -53,9 +60,14 @@
 
                     <h3>Invoice Information</h3>
 
+
                     <!-- Vendor -->
+
                     <div class="form-group">
-                        <label for="vendor">Vendor</label>
+
+                        <label for="vendor">
+                            Vendor
+                        </label>
 
                         <input
                             type="text"
@@ -64,15 +76,19 @@
                             value="{{ invoice_data.invoice.vendor|default:'' }}"
                             required
                         >
+
                     </div>
 
 
-                    <!-- Currency -->
+                    <!-- Currency + Payment Total -->
+
                     <div class="form-row">
 
                         <div class="form-group">
 
-                            <label for="currency">Currency</label>
+                            <label for="currency">
+                                Currency
+                            </label>
 
                             <select
                                 id="currency"
@@ -80,25 +96,31 @@
                                 required
                             >
 
-                                <option value="">Select Currency</option>
+                                <option value="">
+                                    Select Currency
+                                </option>
 
                                 <option value="NGN"
-                                    {% if invoice_data.invoice.currency == "NGN" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.currency == "NGN" %}selected{% endif %}
+                                >
                                     NGN
                                 </option>
 
                                 <option value="USD"
-                                    {% if invoice_data.invoice.currency == "USD" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.currency == "USD" %}selected{% endif %}
+                                >
                                     USD
                                 </option>
 
                                 <option value="GBP"
-                                    {% if invoice_data.invoice.currency == "GBP" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.currency == "GBP" %}selected{% endif %}
+                                >
                                     GBP
                                 </option>
 
                                 <option value="EUR"
-                                    {% if invoice_data.invoice.currency == "EUR" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.currency == "EUR" %}selected{% endif %}
+                                >
                                     EUR
                                 </option>
 
@@ -107,10 +129,11 @@
                         </div>
 
 
-                        <!-- Payment Terms Summary -->
                         <div class="form-group">
 
-                            <label>Payment Terms Total</label>
+                            <label>
+                                Payment Terms Total
+                            </label>
 
                             <div
                                 id="payment-total-display"
@@ -124,7 +147,7 @@
                     </div>
 
 
-                    <!-- Subtotal / Tax / Grand Total -->
+                    <!-- Subtotal + Tax -->
 
                     <div class="form-row">
 
@@ -157,20 +180,31 @@
                                 name="tax"
                             >
 
-                                <option value="">Select Tax</option>
+                                <option value="">
+                                    Select Tax
+                                </option>
 
                                 <option value="N/A"
-                                    {% if invoice_data.invoice.tax == "N/A" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.tax == "N/A" %}
+                                        selected
+                                    {% endif %}
+                                >
                                     N/A
                                 </option>
 
                                 <option value="Inclusive"
-                                    {% if invoice_data.invoice.tax == "Inclusive" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.tax == "Inclusive" %}
+                                        selected
+                                    {% endif %}
+                                >
                                     Inclusive
                                 </option>
 
                                 <option value="Exclusive"
-                                    {% if invoice_data.invoice.tax == "Exclusive" %}selected{% endif %}>
+                                    {% if invoice_data.invoice.tax == "Exclusive" %}
+                                        selected
+                                    {% endif %}
+                                >
                                     Exclusive
                                 </option>
 
@@ -178,6 +212,12 @@
 
                         </div>
 
+                    </div>
+
+
+                    <!-- Tax Group + WHT -->
+
+                    <div class="form-row">
 
                         <div class="form-group">
 
@@ -210,43 +250,41 @@
 
                         </div>
 
-                    </div>
 
+                        <div class="form-group">
 
-                    <!-- WHT -->
+                            <label for="wht">
+                                WHT
+                            </label>
 
-                    <div class="form-group">
+                            <select
+                                id="wht"
+                                name="wht"
+                            >
 
-                        <label for="wht">
-                            WHT
-                        </label>
+                                <option value="">
+                                    Select WHT
+                                </option>
 
-                        <select
-                            id="wht"
-                            name="wht"
-                        >
+                                <option value="WHT-FIRS-2%">
+                                    WHT-FIRS-2%
+                                </option>
 
-                            <option value="">
-                                Select WHT
-                            </option>
+                                <option value="WHT-FIRS-5%">
+                                    WHT-FIRS-5%
+                                </option>
 
-                            <option value="WHT-FIRS-2%">
-                                WHT-FIRS-2%
-                            </option>
+                                <option value="WHT-FIRS-10%">
+                                    WHT-FIRS-10%
+                                </option>
 
-                            <option value="WHT-FIRS-5%">
-                                WHT-FIRS-5%
-                            </option>
+                                <option value="WHT-FIRS-15%">
+                                    WHT-FIRS-15%
+                                </option>
 
-                            <option value="WHT-FIRS-10%">
-                                WHT-FIRS-10%
-                            </option>
+                            </select>
 
-                            <option value="WHT-FIRS-15%">
-                                WHT-FIRS-15%
-                            </option>
-
-                        </select>
+                        </div>
 
                     </div>
 
@@ -300,9 +338,11 @@
 
                         <div class="item-row">
 
-                            <div class="form-group">
+                            <div class="form-group item-name-field">
 
-                                <label>Item Name</label>
+                                <label>
+                                    Item Name
+                                </label>
 
                                 <input
                                     type="text"
@@ -315,9 +355,11 @@
                             </div>
 
 
-                            <div class="form-group">
+                            <div class="form-group item-description-field">
 
-                                <label>Description</label>
+                                <label>
+                                    Description
+                                </label>
 
                                 <input
                                     type="text"
@@ -331,15 +373,17 @@
 
                             <div class="form-group small-field">
 
-                                <label>Quantity</label>
+                                <label>
+                                    Quantity
+                                </label>
 
                                 <input
                                     type="number"
-                                    step="0.01"
-                                    min="0"
                                     name="item_quantity[]"
                                     class="item-quantity"
                                     value="{{ item.quantity|default:'' }}"
+                                    min="0"
+                                    step="0.01"
                                     required
                                 >
 
@@ -348,15 +392,17 @@
 
                             <div class="form-group small-field">
 
-                                <label>Unit Price</label>
+                                <label>
+                                    Unit Price
+                                </label>
 
                                 <input
                                     type="number"
-                                    step="0.01"
-                                    min="0"
                                     name="item_unit_price[]"
                                     class="item-unit-price"
                                     value="{{ item.unit_price|default:'' }}"
+                                    min="0"
+                                    step="0.01"
                                     required
                                 >
 
@@ -365,15 +411,16 @@
 
                             <div class="form-group small-field">
 
-                                <label>Line Total</label>
+                                <label>
+                                    Line Total
+                                </label>
 
                                 <input
                                     type="number"
-                                    step="0.01"
-                                    min="0"
                                     name="item_line_total[]"
                                     class="item-line-total"
                                     value="{{ item.line_total|default:'' }}"
+                                    step="0.01"
                                     readonly
                                 >
 
@@ -391,11 +438,15 @@
 
                         {% empty %}
 
+                        <!-- Initial empty item -->
+
                         <div class="item-row">
 
-                            <div class="form-group">
+                            <div class="form-group item-name-field">
 
-                                <label>Item Name</label>
+                                <label>
+                                    Item Name
+                                </label>
 
                                 <input
                                     type="text"
@@ -407,9 +458,11 @@
                             </div>
 
 
-                            <div class="form-group">
+                            <div class="form-group item-description-field">
 
-                                <label>Description</label>
+                                <label>
+                                    Description
+                                </label>
 
                                 <input
                                     type="text"
@@ -422,14 +475,16 @@
 
                             <div class="form-group small-field">
 
-                                <label>Quantity</label>
+                                <label>
+                                    Quantity
+                                </label>
 
                                 <input
                                     type="number"
-                                    step="0.01"
-                                    min="0"
                                     name="item_quantity[]"
                                     class="item-quantity"
+                                    min="0"
+                                    step="0.01"
                                     required
                                 >
 
@@ -438,14 +493,16 @@
 
                             <div class="form-group small-field">
 
-                                <label>Unit Price</label>
+                                <label>
+                                    Unit Price
+                                </label>
 
                                 <input
                                     type="number"
-                                    step="0.01"
-                                    min="0"
                                     name="item_unit_price[]"
                                     class="item-unit-price"
+                                    min="0"
+                                    step="0.01"
                                     required
                                 >
 
@@ -454,13 +511,15 @@
 
                             <div class="form-group small-field">
 
-                                <label>Line Total</label>
+                                <label>
+                                    Line Total
+                                </label>
 
                                 <input
                                     type="number"
-                                    step="0.01"
                                     name="item_line_total[]"
                                     class="item-line-total"
+                                    step="0.01"
                                     readonly
                                 >
 
@@ -497,8 +556,6 @@
 
 
                     <div id="payment-terms-container">
-
-                        <!-- First payment term -->
 
                         <div class="payment-term-row">
 
@@ -577,7 +634,7 @@
 
 
                 <!-- ========================= -->
-                <!-- SAVE -->
+                <!-- SUBMIT -->
                 <!-- ========================= -->
 
                 <button
@@ -598,37 +655,118 @@
 
 <script>
 
-/* ================================= */
-/* ITEM FUNCTIONS */
-/* ================================= */
+/* =========================================
+   ELEMENTS
+========================================= */
+
+const form = document.getElementById("invoice-form");
 
 const itemsContainer =
     document.getElementById("items-container");
 
-const addItemButton =
-    document.getElementById("add-item");
+const paymentTermsContainer =
+    document.getElementById("payment-terms-container");
+
+const paymentTotalDisplay =
+    document.getElementById("payment-total-display");
+
+const paymentError =
+    document.getElementById("payment-error");
 
 
-function updateItemDescription(row) {
+/* =========================================
+   ITEM TEMPLATE
+========================================= */
 
-    const itemName =
-        row.querySelector(".item-name");
+function createItemRow() {
 
-    const description =
-        row.querySelector(".item-description");
+    const row = document.createElement("div");
 
-    if (itemName.value.trim()) {
+    row.className = "item-row";
 
-        description.value =
-            "This is for the purchase of " +
-            itemName.value.trim();
+    row.innerHTML = `
+        <div class="form-group item-name-field">
+            <label>Item Name</label>
 
-    }
+            <input
+                type="text"
+                name="item_name[]"
+                class="item-name"
+                required
+            >
+        </div>
 
+        <div class="form-group item-description-field">
+            <label>Description</label>
+
+            <input
+                type="text"
+                name="item_description[]"
+                class="item-description"
+            >
+        </div>
+
+        <div class="form-group small-field">
+            <label>Quantity</label>
+
+            <input
+                type="number"
+                name="item_quantity[]"
+                class="item-quantity"
+                min="0"
+                step="0.01"
+                required
+            >
+        </div>
+
+        <div class="form-group small-field">
+            <label>Unit Price</label>
+
+            <input
+                type="number"
+                name="item_unit_price[]"
+                class="item-unit-price"
+                min="0"
+                step="0.01"
+                required
+            >
+        </div>
+
+        <div class="form-group small-field">
+            <label>Line Total</label>
+
+            <input
+                type="number"
+                name="item_line_total[]"
+                class="item-line-total"
+                step="0.01"
+                readonly
+            >
+        </div>
+
+        <button
+            type="button"
+            class="remove-item-button"
+        >
+            Remove
+        </button>
+    `;
+
+    return row;
 }
 
 
-function calculateLineTotal(row) {
+/* =========================================
+   ITEM CALCULATIONS
+========================================= */
+
+function updateItem(row) {
+
+    const name =
+        row.querySelector(".item-name").value.trim();
+
+    const description =
+        row.querySelector(".item-description");
 
     const quantity =
         parseFloat(
@@ -643,168 +781,102 @@ function calculateLineTotal(row) {
     const lineTotal =
         row.querySelector(".item-line-total");
 
+
+    /*
+     * Auto-generate description.
+     * Only update it if the user has not
+     * manually changed it.
+     */
+
+    if (name && !description.dataset.edited) {
+
+        description.value =
+            `This is for the purchase of ${name}`;
+
+    }
+
+
+    /*
+     * Calculate line total.
+     */
+
     lineTotal.value =
         (quantity * unitPrice).toFixed(2);
 
 }
 
 
-function setupItemRow(row) {
+/* =========================================
+   TRACK MANUAL DESCRIPTION EDITS
+========================================= */
 
-    const itemName =
-        row.querySelector(".item-name");
+itemsContainer.addEventListener(
+    "input",
+    event => {
 
-    const quantity =
-        row.querySelector(".item-quantity");
+        if (
+            event.target.classList.contains(
+                "item-description"
+            )
+        ) {
 
-    const unitPrice =
-        row.querySelector(".item-unit-price");
-
-
-    itemName.addEventListener(
-        "input",
-        function () {
-
-            updateItemDescription(row);
+            event.target.dataset.edited = "true";
 
         }
-    );
-
-
-    quantity.addEventListener(
-        "input",
-        function () {
-
-            calculateLineTotal(row);
-
-        }
-    );
-
-
-    unitPrice.addEventListener(
-        "input",
-        function () {
-
-            calculateLineTotal(row);
-
-        }
-    );
-
-}
-
-
-document
-    .querySelectorAll(".item-row")
-    .forEach(setupItemRow);
-
-
-addItemButton.addEventListener(
-    "click",
-    function () {
-
-        const itemRow =
-            document.createElement("div");
-
-        itemRow.className =
-            "item-row";
-
-        itemRow.innerHTML = `
-
-            <div class="form-group">
-
-                <label>Item Name</label>
-
-                <input
-                    type="text"
-                    name="item_name[]"
-                    class="item-name"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>Description</label>
-
-                <input
-                    type="text"
-                    name="item_description[]"
-                    class="item-description"
-                >
-
-            </div>
-
-
-            <div class="form-group small-field">
-
-                <label>Quantity</label>
-
-                <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="item_quantity[]"
-                    class="item-quantity"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group small-field">
-
-                <label>Unit Price</label>
-
-                <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    name="item_unit_price[]"
-                    class="item-unit-price"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group small-field">
-
-                <label>Line Total</label>
-
-                <input
-                    type="number"
-                    step="0.01"
-                    name="item_line_total[]"
-                    class="item-line-total"
-                    readonly
-                >
-
-            </div>
-
-
-            <button
-                type="button"
-                class="remove-item-button"
-            >
-                Remove
-            </button>
-
-        `;
-
-
-        itemsContainer.appendChild(itemRow);
-
-        setupItemRow(itemRow);
 
     }
 );
 
 
+/* =========================================
+   ADD ITEM
+========================================= */
+
+document
+    .getElementById("add-item")
+    .addEventListener(
+        "click",
+        () => {
+
+            itemsContainer.appendChild(
+                createItemRow()
+            );
+
+        }
+    );
+
+
+/* =========================================
+   ITEM EVENT DELEGATION
+========================================= */
+
+itemsContainer.addEventListener(
+    "input",
+    event => {
+
+        if (
+            event.target.matches(
+                ".item-name, .item-quantity, .item-unit-price"
+            )
+        ) {
+
+            updateItem(
+                event.target.closest(".item-row")
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   REMOVE ITEM
+========================================= */
+
 itemsContainer.addEventListener(
     "click",
-    function (event) {
+    event => {
 
         if (
             event.target.classList.contains(
@@ -816,6 +888,7 @@ itemsContainer.addEventListener(
                 itemsContainer.querySelectorAll(
                     ".item-row"
                 );
+
 
             if (rows.length > 1) {
 
@@ -831,64 +904,82 @@ itemsContainer.addEventListener(
 );
 
 
-/* ================================= */
-/* PAYMENT TERM FUNCTIONS */
-/* ================================= */
+/* =========================================
+   PAYMENT TERM TEMPLATE
+========================================= */
 
-const paymentTermsContainer =
-    document.getElementById(
-        "payment-terms-container"
-    );
+function createPaymentTermRow() {
 
-const addPaymentTermButton =
-    document.getElementById(
-        "add-payment-term"
-    );
+    const row =
+        document.createElement("div");
 
-const paymentTotalDisplay =
-    document.getElementById(
-        "payment-total-display"
-    );
+    row.className =
+        "payment-term-row";
 
-const paymentError =
-    document.getElementById(
-        "payment-error"
-    );
+    row.innerHTML = `
+        <div class="form-group">
 
+            <label>Type</label>
 
-function updatePaymentPercentageState(row) {
+            <select
+                name="payment_term_type[]"
+                class="payment-term-type"
+                required
+            >
 
-    const type =
-        row.querySelector(
-            ".payment-term-type"
-        );
+                <option value="">
+                    Select Type
+                </option>
 
-    const percentage =
-        row.querySelector(
-            ".payment-term-percentage"
-        );
+                <option value="Advance payment">
+                    Advance payment
+                </option>
 
+                <option value="On GR/SC">
+                    On GR/SC
+                </option>
 
-    if (type.value) {
+                <option value="On Invoice">
+                    On Invoice
+                </option>
 
-        percentage.disabled = false;
+            </select>
 
-        percentage.placeholder =
-            "Enter percentage";
+        </div>
 
-    } else {
+        <div class="form-group">
 
-        percentage.disabled = true;
+            <label>Payment %</label>
 
-        percentage.value = "";
+            <input
+                type="number"
+                name="payment_term_percentage[]"
+                class="payment-term-percentage"
+                min="1"
+                max="100"
+                step="1"
+                placeholder="Select Type first"
+                disabled
+                required
+            >
 
-        percentage.placeholder =
-            "Select Type first";
+        </div>
 
-    }
+        <button
+            type="button"
+            class="remove-payment-term-button"
+        >
+            Remove
+        </button>
+    `;
 
+    return row;
 }
 
+
+/* =========================================
+   PAYMENT TOTAL
+========================================= */
 
 function updatePaymentTotal() {
 
@@ -898,177 +989,134 @@ function updatePaymentTotal() {
         .querySelectorAll(
             ".payment-term-percentage"
         )
-        .forEach(
-            function (input) {
+        .forEach(input => {
 
-                total +=
-                    parseFloat(input.value) || 0;
+            total +=
+                parseFloat(input.value) || 0;
 
-            }
-        );
+        });
 
 
     paymentTotalDisplay.textContent =
-        total + "%";
+        `${total}%`;
 
 
-    if (total === 100) {
+    paymentTotalDisplay.classList.toggle(
+        "payment-total-valid",
+        total === 100
+    );
 
-        paymentTotalDisplay.classList.add(
-            "payment-total-valid"
-        );
 
-        paymentTotalDisplay.classList.remove(
-            "payment-total-invalid"
-        );
+    paymentTotalDisplay.classList.toggle(
+        "payment-total-invalid",
+        total !== 100
+    );
 
-    } else {
 
-        paymentTotalDisplay.classList.add(
-            "payment-total-invalid"
-        );
-
-        paymentTotalDisplay.classList.remove(
-            "payment-total-valid"
-        );
-
-    }
+    return total;
 
 }
 
 
-function setupPaymentTermRow(row) {
+/* =========================================
+   ADD PAYMENT TERM
+========================================= */
 
-    const type =
-        row.querySelector(
-            ".payment-term-type"
-        );
+document
+    .getElementById("add-payment-term")
+    .addEventListener(
+        "click",
+        () => {
 
-    const percentage =
-        row.querySelector(
-            ".payment-term-percentage"
-        );
-
-
-    type.addEventListener(
-        "change",
-        function () {
-
-            updatePaymentPercentageState(row);
+            paymentTermsContainer.appendChild(
+                createPaymentTermRow()
+            );
 
         }
     );
 
 
-    percentage.addEventListener(
-        "input",
-        function () {
+/* =========================================
+   PAYMENT TYPE CHANGE
+========================================= */
+
+paymentTermsContainer.addEventListener(
+    "change",
+    event => {
+
+        if (
+            event.target.classList.contains(
+                "payment-term-type"
+            )
+        ) {
+
+            const row =
+                event.target.closest(
+                    ".payment-term-row"
+                );
+
+            const percentage =
+                row.querySelector(
+                    ".payment-term-percentage"
+                );
+
+
+            percentage.disabled =
+                !event.target.value;
+
+
+            if (!event.target.value) {
+
+                percentage.value = "";
+
+                percentage.placeholder =
+                    "Select Type first";
+
+            } else {
+
+                percentage.placeholder =
+                    "Enter percentage";
+
+            }
+
 
             updatePaymentTotal();
 
         }
-    );
-
-}
-
-
-document
-    .querySelectorAll(
-        ".payment-term-row"
-    )
-    .forEach(
-        setupPaymentTermRow
-    );
-
-
-addPaymentTermButton.addEventListener(
-    "click",
-    function () {
-
-        const row =
-            document.createElement("div");
-
-        row.className =
-            "payment-term-row";
-
-
-        row.innerHTML = `
-
-            <div class="form-group">
-
-                <label>
-                    Type
-                </label>
-
-                <select
-                    name="payment_term_type[]"
-                    class="payment-term-type"
-                    required
-                >
-
-                    <option value="">
-                        Select Type
-                    </option>
-
-                    <option value="Advance payment">
-                        Advance payment
-                    </option>
-
-                    <option value="On GR/SC">
-                        On GR/SC
-                    </option>
-
-                    <option value="On Invoice">
-                        On Invoice
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>
-                    Payment %
-                </label>
-
-                <input
-                    type="number"
-                    name="payment_term_percentage[]"
-                    class="payment-term-percentage"
-                    min="1"
-                    max="100"
-                    step="1"
-                    placeholder="Select Type first"
-                    disabled
-                    required
-                >
-
-            </div>
-
-
-            <button
-                type="button"
-                class="remove-payment-term-button"
-            >
-                Remove
-            </button>
-
-        `;
-
-
-        paymentTermsContainer.appendChild(row);
-
-        setupPaymentTermRow(row);
 
     }
 );
 
 
+/* =========================================
+   PAYMENT PERCENTAGE CHANGE
+========================================= */
+
+paymentTermsContainer.addEventListener(
+    "input",
+    event => {
+
+        if (
+            event.target.classList.contains(
+                "payment-term-percentage"
+            )
+        ) {
+
+            updatePaymentTotal();
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   REMOVE PAYMENT TERM
+========================================= */
+
 paymentTermsContainer.addEventListener(
     "click",
-    function (event) {
+    event => {
 
         if (
             event.target.classList.contains(
@@ -1100,68 +1148,52 @@ paymentTermsContainer.addEventListener(
 );
 
 
-/* ================================= */
-/* FORM VALIDATION */
-/* ================================= */
+/* =========================================
+   FORM VALIDATION
+========================================= */
 
-document
-    .getElementById("invoice-form")
-    .addEventListener(
-        "submit",
-        function (event) {
+form.addEventListener(
+    "submit",
+    event => {
 
-            let paymentTotal = 0;
-
-            document
-                .querySelectorAll(
-                    ".payment-term-percentage"
-                )
-                .forEach(
-                    function (input) {
-
-                        paymentTotal +=
-                            parseFloat(
-                                input.value
-                            ) || 0;
-
-                    }
-                );
+        const paymentTotal =
+            updatePaymentTotal();
 
 
-            if (paymentTotal !== 100) {
+        if (paymentTotal !== 100) {
 
-                event.preventDefault();
+            event.preventDefault();
 
-                paymentError.textContent =
-                    "Payment terms must add up to exactly 100%.";
+            paymentError.textContent =
+                "Payment terms must add up to exactly 100%.";
 
-                paymentError.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center"
-                });
+            paymentError.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
 
-                return;
-
-            }
-
-
-            paymentError.textContent = "";
+            return;
 
         }
-    );
 
 
-/* Initial calculation */
+        paymentError.textContent = "";
+
+    }
+);
+
+
+/* =========================================
+   INITIALIZATION
+========================================= */
 
 document
     .querySelectorAll(".item-row")
-    .forEach(
-        function (row) {
+    .forEach(row => {
 
-            calculateLineTotal(row);
+        updateItem(row);
 
-        }
-    );
+    });
 
 
 updatePaymentTotal();
