@@ -1,284 +1,284 @@
-/* ============================= */
-/* Global Reset */
-/* ============================= */
+/* =========================================================
+   INVOICE DATA COLLECTION FORM
+   ========================================================= */
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Segoe UI", Tahoma, sans-serif;
-}
-
-body {
-    background: #f7f9fc;
-    color: #333;
-    min-height: 100vh;
-}
-
-
-/* ============================= */
-/* Main Upload Container */
-/* ============================= */
-
-body:has(.container) {
+/* Main form inside verification card */
+.invoice-form {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 2rem;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-.container {
-    width: 100%;
-    max-width: 900px;
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+/* Form sections */
+.form-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.25rem;
 }
 
-.container h1 {
-    text-align: center;
-    margin-bottom: 1.5rem;
+.form-section h3 {
+    margin-bottom: 1rem;
     color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.75rem;
+}
+
+/* Form rows */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+/* Individual form groups */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #34495e;
+}
+
+/* Text inputs, number inputs, selects */
+.invoice-form input[type="text"],
+.invoice-form input[type="number"],
+.invoice-form input[type="date"],
+.invoice-form select,
+.invoice-form textarea {
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #2c3e50;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.invoice-form input[type="text"]:focus,
+.invoice-form input[type="number"]:focus,
+.invoice-form input[type="date"]:focus,
+.invoice-form select:focus,
+.invoice-form textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+}
+
+.invoice-form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Placeholder */
+.invoice-form input::placeholder,
+.invoice-form textarea::placeholder {
+    color: #94a3b8;
 }
 
 
-/* ============================= */
-/* Upload Form */
-/* ============================= */
+/* =========================================================
+   ITEMS
+   ========================================================= */
 
-form {
+.items-container {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.file-label {
-    font-weight: 600;
-}
-
-input[type="file"] {
-    padding: 0.5rem;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background: #fafafa;
-    cursor: pointer;
-}
-
-button {
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    background: #3498db;
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-button:hover {
-    background: #2980b9;
-}
-
-
-/* ============================= */
-/* Output Box */
-/* ============================= */
-
-.output-box {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: #f4f6f8;
-    border-left: 4px solid #3498db;
-    border-radius: 8px;
-}
-
-.output-box h2 {
-    margin-bottom: 1rem;
-    color: #34495e;
-}
-
-.output-box pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: monospace;
-    font-size: 0.95rem;
-    color: #2c3e50;
-    background: #eef2f6;
+.item-card {
+    background: #ffffff;
+    border: 1px solid #dbe2e8;
+    border-radius: 9px;
     padding: 1rem;
-    border-radius: 6px;
-    overflow-x: auto;
+    position: relative;
 }
 
+.item-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
 
-/* ============================= */
-/* Tables */
-/* ============================= */
-
-.output-box table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
+.item-card-header h4 {
+    margin: 0;
+    color: #34495e;
     font-size: 0.95rem;
 }
 
-.output-box th,
-.output-box td {
-    border: 1px solid #dcdfe3;
-    padding: 0.75rem;
-    text-align: left;
-}
-
-.output-box th {
-    background: #ecf0f3;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.output-box td {
-    background: #fff;
-    color: #333;
-}
-
-.output-box tr:last-child td {
-    font-weight: 600;
-    color: #27ae60;
-}
-
-
-/* ============================= */
-/* Toggle Button */
-/* ============================= */
-
-.toggle-btn {
-    margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 8px;
-    background: #3498db;
-    color: white;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.toggle-btn:hover {
-    background: #2980b9;
-}
-
-
-/* ============================= */
-/* Invoice Verification Page */
-/* ============================= */
-
-.verification-container {
-    width: 100%;
-    max-width: 1500px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-.verification-container h1 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: #2c3e50;
-    font-size: 2rem;
-}
-
-.verification-grid {
+/* Item grid */
+.item-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    align-items: start;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Item description spans full width */
+.item-description {
+    grid-column: 1 / -1;
+}
+
+/* Calculated line total */
+.line-total {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    font-weight: 600;
 }
 
 
-/* ============================= */
-/* Verification Cards */
-/* ============================= */
+/* =========================================================
+   PAYMENT TERMS
+   ========================================================= */
 
-.verification-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+.payment-terms-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.verification-card h2 {
-    margin-bottom: 1rem;
-    color: #34495e;
-    font-size: 1.25rem;
-}
+.payment-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
 
-.instruction {
-    margin-bottom: 1rem;
-    color: #666;
-    font-size: 0.9rem;
-}
-
-
-/* ============================= */
-/* Extracted Text */
-/* ============================= */
-
-.extracted-text {
-    height: 600px;
-    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #dbe2e8;
+    border-radius: 9px;
     padding: 1rem;
-    background: #f4f6f8;
-    border: 1px solid #ddd;
-    border-radius: 8px;
 }
 
-.extracted-text pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 0.9rem;
-    line-height: 1.5;
+.payment-total {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: #eef6ff;
+    border: 1px solid #cfe5f8;
+    border-radius: 7px;
+
+    font-weight: 600;
     color: #2c3e50;
 }
 
+.payment-total.valid {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #166534;
+}
 
-/* ============================= */
-/* JSON Editor */
-/* ============================= */
+.payment-total.invalid {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
 
-.json-editor {
-    width: 100%;
-    height: 600px;
-    padding: 1rem;
 
-    resize: vertical;
+/* =========================================================
+   ADD / REMOVE BUTTONS
+   ========================================================= */
 
-    background: #1e1e1e;
-    color: #d4d4d4;
+.add-item-btn,
+.add-payment-btn {
+    width: auto;
+    align-self: flex-start;
 
-    border: 1px solid #444;
-    border-radius: 8px;
+    padding: 0.65rem 1rem;
 
-    font-family: Consolas, "Courier New", monospace;
+    background: #3498db;
+    color: white;
+
+    border: none;
+    border-radius: 7px;
+
     font-size: 0.9rem;
-    line-height: 1.5;
+    font-weight: 600;
 
-    outline: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-.json-editor:focus {
-    border-color: #3498db;
+.add-item-btn:hover,
+.add-payment-btn:hover {
+    background: #2980b9;
+}
+
+.remove-item-btn,
+.remove-payment-btn {
+    padding: 0.55rem 0.8rem;
+
+    background: #e74c3c;
+    color: white;
+
+    border: none;
+    border-radius: 6px;
+
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.remove-item-btn:hover,
+.remove-payment-btn:hover {
+    background: #c0392b;
 }
 
 
-/* ============================= */
-/* Verify Button */
-/* ============================= */
+/* =========================================================
+   REQUIRED / HELP TEXT
+   ========================================================= */
+
+.required {
+    color: #e74c3c;
+    margin-left: 2px;
+}
+
+.help-text {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0.2rem;
+}
+
+
+/* =========================================================
+   FORM ACTIONS
+   ========================================================= */
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
 
 .verify-button {
     width: 100%;
-    margin-top: 1rem;
-    padding: 0.9rem;
+    margin-top: 0;
+
+    padding: 0.9rem 1.5rem;
 
     background: #27ae60;
     color: white;
@@ -290,78 +290,116 @@ button:hover {
     font-weight: 600;
 
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background 0.2s ease;
 }
 
 .verify-button:hover {
     background: #219150;
 }
 
-
-/* ============================= */
-/* Scrollbars */
-/* ============================= */
-
-.extracted-text::-webkit-scrollbar,
-.json-editor::-webkit-scrollbar {
-    width: 8px;
-}
-
-.extracted-text::-webkit-scrollbar-track,
-.json-editor::-webkit-scrollbar-track {
-    background: #eef2f6;
-    border-radius: 8px;
-}
-
-.extracted-text::-webkit-scrollbar-thumb,
-.json-editor::-webkit-scrollbar-thumb {
-    background: #bdc3c7;
-    border-radius: 8px;
+.verify-button:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
 }
 
 
-/* ============================= */
-/* Responsive */
-/* ============================= */
+/* =========================================================
+   ERROR / VALIDATION MESSAGES
+   ========================================================= */
 
-@media (max-width: 900px) {
+.form-error {
+    margin-top: 0.4rem;
+    padding: 0.6rem 0.75rem;
 
-    .verification-container {
-        padding: 1rem;
-    }
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+
+    color: #991b1b;
+    font-size: 0.85rem;
+}
+
+.input-error {
+    border-color: #e74c3c !important;
+    background: #fffafa !important;
+}
+
+
+/* =========================================================
+   INVOICE TOTALS
+   ========================================================= */
+
+.invoice-totals {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.total-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.total-field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.total-field input {
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   RESPONSIVE FORM
+   ========================================================= */
+
+@media (max-width: 1100px) {
 
     .verification-grid {
         grid-template-columns: 1fr;
     }
 
-    .extracted-text,
-    .json-editor {
-        height: 400px;
+    .item-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .item-description {
+        grid-column: 1 / -1;
+    }
+
+    .invoice-totals {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
 
-    body:has(.container) {
-        padding: 1rem;
+    .form-row {
+        grid-template-columns: 1fr;
     }
 
-    .container {
-        padding: 1rem;
+    .item-grid {
+        grid-template-columns: 1fr;
     }
 
-    .verification-container h1 {
-        font-size: 1.5rem;
+    .item-description {
+        grid-column: auto;
     }
 
-    button {
-        font-size: 0.9rem;
-        padding: 0.6rem;
+    .payment-card {
+        grid-template-columns: 1fr;
+        align-items: stretch;
     }
 
-    .output-box table,
-    .output-box th,
-    .output-box td {
-        font-size: 0.85rem;
+    .invoice-totals {
+        grid-template-columns: 1fr;
+    }
+
+    .remove-item-btn,
+    .remove-payment-btn {
+        width: 100%;
     }
 }
