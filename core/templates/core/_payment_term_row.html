@@ -1,0 +1,28 @@
+{% comment %}
+    One payment-term row.
+
+    Used in two places, both sharing this single definition:
+      - the static first row inside #payment-terms-container
+      - the <template id="payment-term-template"> the JS clones for new rows
+{% endcomment %}
+<div class="payment-term-row">
+
+    <div class="form-group">
+        <label>Type</label>
+        <select name="payment_term_type[]" class="payment-term-type" required>
+            <option value="">Select Type</option>
+            <option value="Advance payment">Advance payment</option>
+            <option value="On GR/SC">On GR/SC</option>
+            <option value="On Invoice">On Invoice</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Payment %</label>
+        <input type="number" name="payment_term_percentage[]" class="payment-term-percentage"
+               min="1" max="100" step="1" placeholder="Select Type first" disabled required>
+    </div>
+
+    <button type="button" class="remove-payment-term-button">Remove</button>
+
+</div>

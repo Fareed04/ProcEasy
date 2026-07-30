@@ -1,32 +1,250 @@
 /* =========================================================
-   INVOICE DATA COLLECTION FORM
+   PROCEASY — SHARED STYLESHEET
+   Used by:
+     - index.html   (PDF Text Extractor)
+     - verify.html  (Invoice Verification)
    ========================================================= */
 
-/* Main form inside verification card */
-.invoice-form {
+/* ---------- Base ---------- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 2rem;
+    background: #f8fafc;
+    color: #2c3e50;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+
+h1 {
+    color: #2c3e50;
+}
+
+.hidden {
+    display: none;
+}
+
+/* =========================================================
+   INDEX — PDF TEXT EXTRACTOR
+   ========================================================= */
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.container h1 {
+    margin-top: 0;
+}
+
+/* Upload form */
+.container form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.file-label {
+    padding: 0.6rem 1rem;
+    background: #eef6ff;
+    border: 1px solid #cfe5f8;
+    border-radius: 7px;
+    color: #2c3e50;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.container input[type="file"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #2c3e50;
+}
+
+.container button[type="submit"] {
+    padding: 0.6rem 1.2rem;
+    background: #27ae60;
+    color: #ffffff;
+    border: none;
+    border-radius: 7px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.container button[type="submit"]:hover {
+    background: #219150;
+}
+
+.toggle-btn {
+    margin: 1rem 0;
+    padding: 0.55rem 1rem;
+    background: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.toggle-btn:hover {
+    background: #2980b9;
+}
+
+/* Output boxes */
+.output-box {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.output-box h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.output-box pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    font-size: 0.85rem;
+    color: #34495e;
+}
+
+/* Parsed data tables */
+.output-box table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.output-box th,
+.output-box td {
+    border: 1px solid #e2e8f0;
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.output-box th {
+    background: #f4f6f8;
+    color: #34495e;
+    font-weight: 700;
+}
+
+/* =========================================================
+   VERIFY — LAYOUT
+   ========================================================= */
+
+.verification-container {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.verification-container h1 {
+    margin-top: 0;
+}
+
+.verification-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.verification-card {
+    padding: 1.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.verification-card h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+}
+
+.instruction {
+    margin-top: -0.25rem;
+    margin-bottom: 1.25rem;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+/* Extracted text panel */
+.extracted-text {
+    max-height: 70vh;
+    overflow: auto;
+    padding: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+
+.extracted-text pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    font-size: 0.85rem;
+    color: #34495e;
+}
+
+/* =========================================================
+   VERIFY — FORM
+   ========================================================= */
+
+#invoice-form {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
-/* Form sections */
+/* Sections */
 .form-section {
+    padding: 1.25rem;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
-    padding: 1.25rem;
 }
 
 .form-section h3 {
-    margin-bottom: 1rem;
+    margin: 0 0 1rem;
     color: #2c3e50;
     font-size: 1.1rem;
     font-weight: 700;
-    border-bottom: 1px solid #e2e8f0;
-    padding-bottom: 0.75rem;
 }
 
-/* Form rows */
+/* Section header (title + add button) */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header h3 {
+    margin: 0;
+}
+
+/* Rows and groups */
 .form-row {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -38,29 +256,35 @@
     margin-bottom: 0;
 }
 
-/* Individual form groups */
 .form-group {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+    margin-bottom: 1rem;
 }
 
-.form-group.full-width {
-    grid-column: 1 / -1;
+.form-group:last-child {
+    margin-bottom: 0;
 }
 
-.form-group label {
+.form-group label,
+.section-header + * label {
     font-size: 0.9rem;
     font-weight: 600;
     color: #34495e;
 }
 
-/* Text inputs, number inputs, selects */
-.invoice-form input[type="text"],
-.invoice-form input[type="number"],
-.invoice-form input[type="date"],
-.invoice-form select,
-.invoice-form textarea {
+/* Groups inside a form-row/item-row shouldn't double up bottom margin */
+.form-row .form-group,
+.item-row .form-group,
+.payment-term-row .form-group {
+    margin-bottom: 0;
+}
+
+/* Inputs and selects */
+#invoice-form input[type="text"],
+#invoice-form input[type="number"],
+#invoice-form select {
     width: 100%;
     padding: 0.7rem 0.8rem;
     border: 1px solid #cbd5e1;
@@ -68,227 +292,157 @@
     background: #ffffff;
     color: #2c3e50;
     font-size: 0.9rem;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.invoice-form input[type="text"]:focus,
-.invoice-form input[type="number"]:focus,
-.invoice-form input[type="date"]:focus,
-.invoice-form select:focus,
-.invoice-form textarea:focus {
+#invoice-form input[type="text"]:focus,
+#invoice-form input[type="number"]:focus,
+#invoice-form select:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
 }
 
-.invoice-form textarea {
-    min-height: 80px;
-    resize: vertical;
-}
-
-/* Placeholder */
-.invoice-form input::placeholder,
-.invoice-form textarea::placeholder {
+#invoice-form input::placeholder {
     color: #94a3b8;
 }
 
-
-/* =========================================================
-   ITEMS
-   ========================================================= */
-
-.items-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.item-card {
-    background: #ffffff;
-    border: 1px solid #dbe2e8;
-    border-radius: 9px;
-    padding: 1rem;
-    position: relative;
-}
-
-.item-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.item-card-header h4 {
-    margin: 0;
-    color: #34495e;
-    font-size: 0.95rem;
-}
-
-/* Item grid */
-.item-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 1rem;
-}
-
-/* Item description spans full width */
-.item-description {
-    grid-column: 1 / -1;
-}
-
-/* Calculated line total */
-.line-total {
-    background: #f1f5f9 !important;
-    color: #475569 !important;
+#invoice-form input[readonly] {
+    background: #f1f5f9;
+    color: #475569;
     font-weight: 600;
 }
 
-
-/* =========================================================
-   PAYMENT TERMS
-   ========================================================= */
-
-.payment-terms-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+#invoice-form input:disabled,
+#invoice-form select:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
 }
 
-.payment-card {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 1rem;
-    align-items: end;
+/* =========================================================
+   VERIFY — ITEM ROWS
+   ========================================================= */
 
+.item-row {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 1fr 1fr auto;
+    gap: 0.75rem;
+    align-items: end;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
     background: #ffffff;
     border: 1px solid #dbe2e8;
     border-radius: 9px;
-    padding: 1rem;
 }
 
-.payment-total {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
+.item-row:last-child {
+    margin-bottom: 0;
+}
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Column hints — the grid template above drives widths, these keep
+   the name/description fields prominent when the grid collapses. */
+.item-name-field {
+    min-width: 0;
+}
 
+.item-description-field {
+    min-width: 0;
+}
+
+.small-field {
+    min-width: 0;
+}
+
+/* =========================================================
+   VERIFY — PAYMENT TERM ROWS
+   ========================================================= */
+
+.payment-term-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.75rem;
+    align-items: end;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: #ffffff;
+    border: 1px solid #dbe2e8;
+    border-radius: 9px;
+}
+
+.payment-term-row:last-child {
+    margin-bottom: 0;
+}
+
+/* Payment terms total indicator */
+.payment-total-display {
+    padding: 0.7rem 0.8rem;
     background: #eef6ff;
     border: 1px solid #cfe5f8;
     border-radius: 7px;
-
-    font-weight: 600;
     color: #2c3e50;
+    font-weight: 700;
 }
 
-.payment-total.valid {
+.payment-total-display.payment-total-valid {
     background: #ecfdf5;
     border-color: #bbf7d0;
     color: #166534;
 }
 
-.payment-total.invalid {
+.payment-total-display.payment-total-invalid {
     background: #fef2f2;
     border-color: #fecaca;
     color: #991b1b;
 }
 
-
 /* =========================================================
-   ADD / REMOVE BUTTONS
+   VERIFY — BUTTONS
    ========================================================= */
 
-.add-item-btn,
-.add-payment-btn {
-    width: auto;
-    align-self: flex-start;
-
-    padding: 0.65rem 1rem;
-
+.add-item-button {
+    padding: 0.5rem 0.9rem;
     background: #3498db;
-    color: white;
-
+    color: #ffffff;
     border: none;
     border-radius: 7px;
-
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
-
     cursor: pointer;
     transition: background 0.2s ease;
 }
 
-.add-item-btn:hover,
-.add-payment-btn:hover {
+.add-item-button:hover {
     background: #2980b9;
 }
 
-.remove-item-btn,
-.remove-payment-btn {
+.remove-item-button,
+.remove-payment-term-button {
     padding: 0.55rem 0.8rem;
-
     background: #e74c3c;
-    color: white;
-
+    color: #ffffff;
     border: none;
     border-radius: 6px;
-
     font-size: 0.8rem;
     font-weight: 600;
-
     cursor: pointer;
     transition: background 0.2s ease;
 }
 
-.remove-item-btn:hover,
-.remove-payment-btn:hover {
+.remove-item-button:hover,
+.remove-payment-term-button:hover {
     background: #c0392b;
-}
-
-
-/* =========================================================
-   REQUIRED / HELP TEXT
-   ========================================================= */
-
-.required {
-    color: #e74c3c;
-    margin-left: 2px;
-}
-
-.help-text {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-top: 0.2rem;
-}
-
-
-/* =========================================================
-   FORM ACTIONS
-   ========================================================= */
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 0.5rem;
 }
 
 .verify-button {
     width: 100%;
-    margin-top: 0;
-
     padding: 0.9rem 1.5rem;
-
     background: #27ae60;
-    color: white;
-
+    color: #ffffff;
     border: none;
     border-radius: 8px;
-
     font-size: 1rem;
     font-weight: 600;
-
     cursor: pointer;
     transition: background 0.2s ease;
 }
@@ -302,58 +456,23 @@
     cursor: not-allowed;
 }
 
-
 /* =========================================================
-   ERROR / VALIDATION MESSAGES
+   VERIFY — VALIDATION MESSAGE
    ========================================================= */
 
 .form-error {
-    margin-top: 0.4rem;
-    padding: 0.6rem 0.75rem;
-
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 6px;
-
+    margin-top: 0.75rem;
     color: #991b1b;
     font-size: 0.85rem;
-}
-
-.input-error {
-    border-color: #e74c3c !important;
-    background: #fffafa !important;
-}
-
-
-/* =========================================================
-   INVOICE TOTALS
-   ========================================================= */
-
-.invoice-totals {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
-
-.total-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.total-field label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #475569;
-}
-
-.total-field input {
     font-weight: 600;
 }
 
+.form-error:empty {
+    display: none;
+}
 
 /* =========================================================
-   RESPONSIVE FORM
+   RESPONSIVE
    ========================================================= */
 
 @media (max-width: 1100px) {
@@ -362,44 +481,39 @@
         grid-template-columns: 1fr;
     }
 
-    .item-grid {
+    .item-row {
         grid-template-columns: 1fr 1fr;
     }
 
-    .item-description {
+    .item-name-field,
+    .item-description-field {
         grid-column: 1 / -1;
-    }
-
-    .invoice-totals {
-        grid-template-columns: 1fr 1fr;
     }
 }
 
 @media (max-width: 700px) {
 
+    body {
+        padding: 1rem;
+    }
+
     .form-row {
         grid-template-columns: 1fr;
     }
 
-    .item-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .item-description {
-        grid-column: auto;
-    }
-
-    .payment-card {
+    .item-row,
+    .payment-term-row {
         grid-template-columns: 1fr;
         align-items: stretch;
     }
 
-    .invoice-totals {
-        grid-template-columns: 1fr;
+    .item-name-field,
+    .item-description-field {
+        grid-column: auto;
     }
 
-    .remove-item-btn,
-    .remove-payment-btn {
+    .remove-item-button,
+    .remove-payment-term-button {
         width: 100%;
     }
 }
