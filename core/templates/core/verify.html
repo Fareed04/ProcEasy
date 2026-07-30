@@ -1,14 +1,11 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Verify Invoice | ProcEasy</title>
-
     <link rel="stylesheet" href="{% static 'core/styles.css' %}">
 </head>
 
@@ -20,29 +17,18 @@
 
     <div class="verification-grid">
 
-        <!-- ========================= -->
-        <!-- EXTRACTED TEXT -->
-        <!-- ========================= -->
-
+        <!-- Extracted text -->
         <section class="verification-card extracted-card">
-
             <h2>Extracted Invoice Text</h2>
-
             <div class="extracted-text">
                 <pre>{{ invoice.extracted_text }}</pre>
             </div>
-
         </section>
 
-
-        <!-- ========================= -->
-        <!-- INVOICE DATA -->
-        <!-- ========================= -->
-
+        <!-- Invoice data form -->
         <section class="verification-card">
 
             <h2>Invoice Data</h2>
-
             <p class="instruction">
                 Review and correct the extracted information before saving.
             </p>
@@ -51,599 +37,120 @@
 
                 {% csrf_token %}
 
-
-                <!-- ========================= -->
-                <!-- INVOICE INFORMATION -->
-                <!-- ========================= -->
-
+                <!-- Invoice information -->
                 <div class="form-section">
 
                     <h3>Invoice Information</h3>
 
+                    <div class="form-group">
+                        <label for="vendor">Vendor</label>
+                        <input type="text" id="vendor" name="vendor"
+                               value="{{ invoice_data.invoice.vendor|default:'' }}" required>
+                    </div>
 
-                    <!-- Vendor -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currency">Currency</label>
+                            <select id="currency" name="currency" required>
+                                <option value="">Select Currency</option>
+                                <option value="NGN" {% if invoice_data.invoice.currency == "NGN" %}selected{% endif %}>NGN</option>
+                                <option value="USD" {% if invoice_data.invoice.currency == "USD" %}selected{% endif %}>USD</option>
+                                <option value="GBP" {% if invoice_data.invoice.currency == "GBP" %}selected{% endif %}>GBP</option>
+                                <option value="EUR" {% if invoice_data.invoice.currency == "EUR" %}selected{% endif %}>EUR</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Payment Terms Total</label>
+                            <div id="payment-total-display" class="payment-total-display">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subtotal">Subtotal</label>
+                            <input type="number" step="0.01" min="0" id="subtotal" name="subtotal"
+                                   value="{{ invoice_data.invoice.subtotal|default:'' }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tax">Tax</label>
+                            <select id="tax" name="tax">
+                                <option value="">Select Tax</option>
+                                <option value="N/A" {% if invoice_data.invoice.tax == "N/A" %}selected{% endif %}>N/A</option>
+                                <option value="Inclusive" {% if invoice_data.invoice.tax == "Inclusive" %}selected{% endif %}>Inclusive</option>
+                                <option value="Exclusive" {% if invoice_data.invoice.tax == "Exclusive" %}selected{% endif %}>Exclusive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tax_group">Tax Group</label>
+                            <select id="tax_group" name="tax_group">
+                                <option value="">Select Tax Group</option>
+                                <option value="VAT 0% - FIRS">VAT 0% - FIRS</option>
+                                <option value="VAT 7.5% - FIRS">VAT 7.5% - FIRS</option>
+                                <option value="VAT 5% - FIRS">VAT 5% - FIRS</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="wht">WHT</label>
+                            <select id="wht" name="wht">
+                                <option value="">Select WHT</option>
+                                <option value="WHT-FIRS-2%">WHT-FIRS-2%</option>
+                                <option value="WHT-FIRS-5%">WHT-FIRS-5%</option>
+                                <option value="WHT-FIRS-10%">WHT-FIRS-10%</option>
+                                <option value="WHT-FIRS-15%">WHT-FIRS-15%</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="form-group">
-
-                        <label for="vendor">
-                            Vendor
-                        </label>
-
-                        <input
-                            type="text"
-                            id="vendor"
-                            name="vendor"
-                            value="{{ invoice_data.invoice.vendor|default:'' }}"
-                            required
-                        >
-
-                    </div>
-
-
-                    <!-- Currency + Payment Total -->
-
-                    <div class="form-row">
-
-                        <div class="form-group">
-
-                            <label for="currency">
-                                Currency
-                            </label>
-
-                            <select
-                                id="currency"
-                                name="currency"
-                                required
-                            >
-
-                                <option value="">
-                                    Select Currency
-                                </option>
-
-                                <option value="NGN"
-                                    {% if invoice_data.invoice.currency == "NGN" %}selected{% endif %}
-                                >
-                                    NGN
-                                </option>
-
-                                <option value="USD"
-                                    {% if invoice_data.invoice.currency == "USD" %}selected{% endif %}
-                                >
-                                    USD
-                                </option>
-
-                                <option value="GBP"
-                                    {% if invoice_data.invoice.currency == "GBP" %}selected{% endif %}
-                                >
-                                    GBP
-                                </option>
-
-                                <option value="EUR"
-                                    {% if invoice_data.invoice.currency == "EUR" %}selected{% endif %}
-                                >
-                                    EUR
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label>
-                                Payment Terms Total
-                            </label>
-
-                            <div
-                                id="payment-total-display"
-                                class="payment-total-display"
-                            >
-                                0%
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Subtotal + Tax -->
-
-                    <div class="form-row">
-
-                        <div class="form-group">
-
-                            <label for="subtotal">
-                                Subtotal
-                            </label>
-
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                id="subtotal"
-                                name="subtotal"
-                                value="{{ invoice_data.invoice.subtotal|default:'' }}"
-                            >
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label for="tax">
-                                Tax
-                            </label>
-
-                            <select
-                                id="tax"
-                                name="tax"
-                            >
-
-                                <option value="">
-                                    Select Tax
-                                </option>
-
-                                <option value="N/A"
-                                    {% if invoice_data.invoice.tax == "N/A" %}
-                                        selected
-                                    {% endif %}
-                                >
-                                    N/A
-                                </option>
-
-                                <option value="Inclusive"
-                                    {% if invoice_data.invoice.tax == "Inclusive" %}
-                                        selected
-                                    {% endif %}
-                                >
-                                    Inclusive
-                                </option>
-
-                                <option value="Exclusive"
-                                    {% if invoice_data.invoice.tax == "Exclusive" %}
-                                        selected
-                                    {% endif %}
-                                >
-                                    Exclusive
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Tax Group + WHT -->
-
-                    <div class="form-row">
-
-                        <div class="form-group">
-
-                            <label for="tax_group">
-                                Tax Group
-                            </label>
-
-                            <select
-                                id="tax_group"
-                                name="tax_group"
-                            >
-
-                                <option value="">
-                                    Select Tax Group
-                                </option>
-
-                                <option value="VAT 0% - FIRS">
-                                    VAT 0% - FIRS
-                                </option>
-
-                                <option value="VAT 7.5% - FIRS">
-                                    VAT 7.5% - FIRS
-                                </option>
-
-                                <option value="VAT 5% - FIRS">
-                                    VAT 5% - FIRS
-                                </option>
-
-                            </select>
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label for="wht">
-                                WHT
-                            </label>
-
-                            <select
-                                id="wht"
-                                name="wht"
-                            >
-
-                                <option value="">
-                                    Select WHT
-                                </option>
-
-                                <option value="WHT-FIRS-2%">
-                                    WHT-FIRS-2%
-                                </option>
-
-                                <option value="WHT-FIRS-5%">
-                                    WHT-FIRS-5%
-                                </option>
-
-                                <option value="WHT-FIRS-10%">
-                                    WHT-FIRS-10%
-                                </option>
-
-                                <option value="WHT-FIRS-15%">
-                                    WHT-FIRS-15%
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- Grand Total -->
-
-                    <div class="form-group">
-
-                        <label for="grand_total">
-                            Grand Total
-                        </label>
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            id="grand_total"
-                            name="grand_total"
-                            value="{{ invoice_data.invoice.grand_total|default:'' }}"
-                        >
-
+                        <label for="grand_total">Grand Total</label>
+                        <input type="number" step="0.01" min="0" id="grand_total" name="grand_total"
+                               value="{{ invoice_data.invoice.grand_total|default:'' }}">
                     </div>
 
                 </div>
 
-
-                <!-- ========================= -->
-                <!-- ITEMS -->
-                <!-- ========================= -->
-
+                <!-- Invoice items -->
                 <div class="form-section">
 
                     <div class="section-header">
-
                         <h3>Invoice Items</h3>
-
-                        <button
-                            type="button"
-                            id="add-item"
-                            class="add-item-button"
-                        >
-                            + Add Item
-                        </button>
-
+                        <button type="button" id="add-item" class="add-item-button">+ Add Item</button>
                     </div>
-
 
                     <div id="items-container">
-
                         {% for item in invoice_data.items %}
-
-                        <div class="item-row">
-
-                            <div class="form-group item-name-field">
-
-                                <label>
-                                    Item Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="item_name[]"
-                                    class="item-name"
-                                    value="{{ item.item_name|default:'' }}"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="form-group item-description-field">
-
-                                <label>
-                                    Description
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="item_description[]"
-                                    class="item-description"
-                                    value="{{ item.description|default:'' }}"
-                                >
-
-                            </div>
-
-
-                            <div class="form-group small-field">
-
-                                <label>
-                                    Quantity
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="item_quantity[]"
-                                    class="item-quantity"
-                                    value="{{ item.quantity|default:'' }}"
-                                    min="0"
-                                    step="0.01"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="form-group small-field">
-
-                                <label>
-                                    Unit Price
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="item_unit_price[]"
-                                    class="item-unit-price"
-                                    value="{{ item.unit_price|default:'' }}"
-                                    min="0"
-                                    step="0.01"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="form-group small-field">
-
-                                <label>
-                                    Line Total
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="item_line_total[]"
-                                    class="item-line-total"
-                                    value="{{ item.line_total|default:'' }}"
-                                    step="0.01"
-                                    readonly
-                                >
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                class="remove-item-button"
-                            >
-                                Remove
-                            </button>
-
-                        </div>
-
+                            {% include "core/_invoice_item_row.html" %}
                         {% empty %}
-
-                        <!-- Initial empty item -->
-
-                        <div class="item-row">
-
-                            <div class="form-group item-name-field">
-
-                                <label>
-                                    Item Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="item_name[]"
-                                    class="item-name"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="form-group item-description-field">
-
-                                <label>
-                                    Description
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="item_description[]"
-                                    class="item-description"
-                                >
-
-                            </div>
-
-
-                            <div class="form-group small-field">
-
-                                <label>
-                                    Quantity
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="item_quantity[]"
-                                    class="item-quantity"
-                                    min="0"
-                                    step="0.01"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="form-group small-field">
-
-                                <label>
-                                    Unit Price
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="item_unit_price[]"
-                                    class="item-unit-price"
-                                    min="0"
-                                    step="0.01"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="form-group small-field">
-
-                                <label>
-                                    Line Total
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="item_line_total[]"
-                                    class="item-line-total"
-                                    step="0.01"
-                                    readonly
-                                >
-
-                            </div>
-
-                        </div>
-
+                            {% include "core/_invoice_item_row.html" %}
                         {% endfor %}
-
                     </div>
 
                 </div>
 
-
-                <!-- ========================= -->
-                <!-- PAYMENT TERMS -->
-                <!-- ========================= -->
-
+                <!-- Payment terms -->
                 <div class="form-section">
 
                     <div class="section-header">
-
                         <h3>Payment Terms</h3>
-
-                        <button
-                            type="button"
-                            id="add-payment-term"
-                            class="add-item-button"
-                        >
-                            + Add Payment Term
-                        </button>
-
+                        <button type="button" id="add-payment-term" class="add-item-button">+ Add Payment Term</button>
                     </div>
-
 
                     <div id="payment-terms-container">
-
-                        <div class="payment-term-row">
-
-                            <div class="form-group">
-
-                                <label>
-                                    Type
-                                </label>
-
-                                <select
-                                    name="payment_term_type[]"
-                                    class="payment-term-type"
-                                    required
-                                >
-
-                                    <option value="">
-                                        Select Type
-                                    </option>
-
-                                    <option value="Advance payment">
-                                        Advance payment
-                                    </option>
-
-                                    <option value="On GR/SC">
-                                        On GR/SC
-                                    </option>
-
-                                    <option value="On Invoice">
-                                        On Invoice
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-                            <div class="form-group">
-
-                                <label>
-                                    Payment %
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="payment_term_percentage[]"
-                                    class="payment-term-percentage"
-                                    min="1"
-                                    max="100"
-                                    step="1"
-                                    placeholder="Select Type first"
-                                    disabled
-                                    required
-                                >
-
-                            </div>
-
-
-                            <button
-                                type="button"
-                                class="remove-payment-term-button"
-                            >
-                                Remove
-                            </button>
-
-                        </div>
-
+                        {% include "core/_payment_term_row.html" %}
                     </div>
 
-
-                    <div
-                        id="payment-error"
-                        class="form-error"
-                    ></div>
+                    <div id="payment-error" class="form-error"></div>
 
                 </div>
 
-
-                <!-- ========================= -->
-                <!-- SUBMIT -->
-                <!-- ========================= -->
-
-                <button
-                    type="submit"
-                    class="verify-button"
-                >
-                    Mark as Verified
-                </button>
-
+                <!-- Submit -->
+                <button type="submit" class="verify-button">Mark as Verified</button>
             </form>
 
         </section>
@@ -652,552 +159,151 @@
 
 </div>
 
+<!-- Row templates cloned by the JS below; same partials as the server-rendered rows -->
+<template id="item-row-template">
+    {% include "core/_invoice_item_row.html" %}
+</template>
+
+<template id="payment-term-template">
+    {% include "core/_payment_term_row.html" %}
+</template>
 
 <script>
+"use strict";
 
-/* =========================================
-   ELEMENTS
-========================================= */
-
+/* Elements */
 const form = document.getElementById("invoice-form");
+const itemsContainer = document.getElementById("items-container");
+const paymentTermsContainer = document.getElementById("payment-terms-container");
+const paymentTotalDisplay = document.getElementById("payment-total-display");
+const paymentError = document.getElementById("payment-error");
 
-const itemsContainer =
-    document.getElementById("items-container");
+const itemRowTemplate = document.getElementById("item-row-template");
+const paymentTermTemplate = document.getElementById("payment-term-template");
 
-const paymentTermsContainer =
-    document.getElementById("payment-terms-container");
-
-const paymentTotalDisplay =
-    document.getElementById("payment-total-display");
-
-const paymentError =
-    document.getElementById("payment-error");
-
-
-/* =========================================
-   ITEM TEMPLATE
-========================================= */
-
+/* Row factories — clone the shared <template> markup, no duplicated HTML */
 function createItemRow() {
-
-    const row = document.createElement("div");
-
-    row.className = "item-row";
-
-    row.innerHTML = `
-        <div class="form-group item-name-field">
-            <label>Item Name</label>
-
-            <input
-                type="text"
-                name="item_name[]"
-                class="item-name"
-                required
-            >
-        </div>
-
-        <div class="form-group item-description-field">
-            <label>Description</label>
-
-            <input
-                type="text"
-                name="item_description[]"
-                class="item-description"
-            >
-        </div>
-
-        <div class="form-group small-field">
-            <label>Quantity</label>
-
-            <input
-                type="number"
-                name="item_quantity[]"
-                class="item-quantity"
-                min="0"
-                step="0.01"
-                required
-            >
-        </div>
-
-        <div class="form-group small-field">
-            <label>Unit Price</label>
-
-            <input
-                type="number"
-                name="item_unit_price[]"
-                class="item-unit-price"
-                min="0"
-                step="0.01"
-                required
-            >
-        </div>
-
-        <div class="form-group small-field">
-            <label>Line Total</label>
-
-            <input
-                type="number"
-                name="item_line_total[]"
-                class="item-line-total"
-                step="0.01"
-                readonly
-            >
-        </div>
-
-        <button
-            type="button"
-            class="remove-item-button"
-        >
-            Remove
-        </button>
-    `;
-
-    return row;
+    return itemRowTemplate.content.firstElementChild.cloneNode(true);
 }
-
-
-/* =========================================
-   ITEM CALCULATIONS
-========================================= */
-
-function updateItem(row) {
-
-    const name =
-        row.querySelector(".item-name").value.trim();
-
-    const description =
-        row.querySelector(".item-description");
-
-    const quantity =
-        parseFloat(
-            row.querySelector(".item-quantity").value
-        ) || 0;
-
-    const unitPrice =
-        parseFloat(
-            row.querySelector(".item-unit-price").value
-        ) || 0;
-
-    const lineTotal =
-        row.querySelector(".item-line-total");
-
-
-    /*
-     * Auto-generate description.
-     * Only update it if the user has not
-     * manually changed it.
-     */
-
-    if (name && !description.dataset.edited) {
-
-        description.value =
-            `This is for the purchase of ${name}`;
-
-    }
-
-
-    /*
-     * Calculate line total.
-     */
-
-    lineTotal.value =
-        (quantity * unitPrice).toFixed(2);
-
-}
-
-
-/* =========================================
-   TRACK MANUAL DESCRIPTION EDITS
-========================================= */
-
-itemsContainer.addEventListener(
-    "input",
-    event => {
-
-        if (
-            event.target.classList.contains(
-                "item-description"
-            )
-        ) {
-
-            event.target.dataset.edited = "true";
-
-        }
-
-    }
-);
-
-
-/* =========================================
-   ADD ITEM
-========================================= */
-
-document
-    .getElementById("add-item")
-    .addEventListener(
-        "click",
-        () => {
-
-            itemsContainer.appendChild(
-                createItemRow()
-            );
-
-        }
-    );
-
-
-/* =========================================
-   ITEM EVENT DELEGATION
-========================================= */
-
-itemsContainer.addEventListener(
-    "input",
-    event => {
-
-        if (
-            event.target.matches(
-                ".item-name, .item-quantity, .item-unit-price"
-            )
-        ) {
-
-            updateItem(
-                event.target.closest(".item-row")
-            );
-
-        }
-
-    }
-);
-
-
-/* =========================================
-   REMOVE ITEM
-========================================= */
-
-itemsContainer.addEventListener(
-    "click",
-    event => {
-
-        if (
-            event.target.classList.contains(
-                "remove-item-button"
-            )
-        ) {
-
-            const rows =
-                itemsContainer.querySelectorAll(
-                    ".item-row"
-                );
-
-
-            if (rows.length > 1) {
-
-                event.target
-                    .closest(".item-row")
-                    .remove();
-
-            }
-
-        }
-
-    }
-);
-
-
-/* =========================================
-   PAYMENT TERM TEMPLATE
-========================================= */
 
 function createPaymentTermRow() {
-
-    const row =
-        document.createElement("div");
-
-    row.className =
-        "payment-term-row";
-
-    row.innerHTML = `
-        <div class="form-group">
-
-            <label>Type</label>
-
-            <select
-                name="payment_term_type[]"
-                class="payment-term-type"
-                required
-            >
-
-                <option value="">
-                    Select Type
-                </option>
-
-                <option value="Advance payment">
-                    Advance payment
-                </option>
-
-                <option value="On GR/SC">
-                    On GR/SC
-                </option>
-
-                <option value="On Invoice">
-                    On Invoice
-                </option>
-
-            </select>
-
-        </div>
-
-        <div class="form-group">
-
-            <label>Payment %</label>
-
-            <input
-                type="number"
-                name="payment_term_percentage[]"
-                class="payment-term-percentage"
-                min="1"
-                max="100"
-                step="1"
-                placeholder="Select Type first"
-                disabled
-                required
-            >
-
-        </div>
-
-        <button
-            type="button"
-            class="remove-payment-term-button"
-        >
-            Remove
-        </button>
-    `;
-
-    return row;
+    return paymentTermTemplate.content.firstElementChild.cloneNode(true);
 }
 
+/* Item calculations: auto-fill description (until user edits it) and line total */
+function updateItem(row) {
+    const name = row.querySelector(".item-name").value.trim();
+    const description = row.querySelector(".item-description");
+    const quantity = parseFloat(row.querySelector(".item-quantity").value) || 0;
+    const unitPrice = parseFloat(row.querySelector(".item-unit-price").value) || 0;
+    const lineTotal = row.querySelector(".item-line-total");
 
-/* =========================================
-   PAYMENT TOTAL
-========================================= */
+    if (name && !description.dataset.edited) {
+        description.value = `This is for the purchase of ${name}`;
+    }
 
+    lineTotal.value = (quantity * unitPrice).toFixed(2);
+}
+
+/* Items: track manual description edits so we stop auto-filling */
+itemsContainer.addEventListener("input", event => {
+    if (event.target.classList.contains("item-description")) {
+        event.target.dataset.edited = "true";
+    }
+});
+
+/* Items: add */
+document.getElementById("add-item").addEventListener("click", () => {
+    itemsContainer.appendChild(createItemRow());
+});
+
+/* Items: recalculate on relevant input */
+itemsContainer.addEventListener("input", event => {
+    if (event.target.matches(".item-name, .item-quantity, .item-unit-price")) {
+        updateItem(event.target.closest(".item-row"));
+    }
+});
+
+/* Items: remove (keep at least one row) */
+itemsContainer.addEventListener("click", event => {
+    if (event.target.classList.contains("remove-item-button")) {
+        if (itemsContainer.querySelectorAll(".item-row").length > 1) {
+            event.target.closest(".item-row").remove();
+        }
+    }
+});
+
+/* Payment terms: total must equal 100% */
 function updatePaymentTotal() {
-
     let total = 0;
-
-    document
-        .querySelectorAll(
-            ".payment-term-percentage"
-        )
-        .forEach(input => {
-
-            total +=
-                parseFloat(input.value) || 0;
-
-        });
-
-
-    paymentTotalDisplay.textContent =
-        `${total}%`;
-
-
-    paymentTotalDisplay.classList.toggle(
-        "payment-total-valid",
-        total === 100
-    );
-
-
-    paymentTotalDisplay.classList.toggle(
-        "payment-total-invalid",
-        total !== 100
-    );
-
-
-    return total;
-
-}
-
-
-/* =========================================
-   ADD PAYMENT TERM
-========================================= */
-
-document
-    .getElementById("add-payment-term")
-    .addEventListener(
-        "click",
-        () => {
-
-            paymentTermsContainer.appendChild(
-                createPaymentTermRow()
-            );
-
-        }
-    );
-
-
-/* =========================================
-   PAYMENT TYPE CHANGE
-========================================= */
-
-paymentTermsContainer.addEventListener(
-    "change",
-    event => {
-
-        if (
-            event.target.classList.contains(
-                "payment-term-type"
-            )
-        ) {
-
-            const row =
-                event.target.closest(
-                    ".payment-term-row"
-                );
-
-            const percentage =
-                row.querySelector(
-                    ".payment-term-percentage"
-                );
-
-
-            percentage.disabled =
-                !event.target.value;
-
-
-            if (!event.target.value) {
-
-                percentage.value = "";
-
-                percentage.placeholder =
-                    "Select Type first";
-
-            } else {
-
-                percentage.placeholder =
-                    "Enter percentage";
-
-            }
-
-
-            updatePaymentTotal();
-
-        }
-
-    }
-);
-
-
-/* =========================================
-   PAYMENT PERCENTAGE CHANGE
-========================================= */
-
-paymentTermsContainer.addEventListener(
-    "input",
-    event => {
-
-        if (
-            event.target.classList.contains(
-                "payment-term-percentage"
-            )
-        ) {
-
-            updatePaymentTotal();
-
-        }
-
-    }
-);
-
-
-/* =========================================
-   REMOVE PAYMENT TERM
-========================================= */
-
-paymentTermsContainer.addEventListener(
-    "click",
-    event => {
-
-        if (
-            event.target.classList.contains(
-                "remove-payment-term-button"
-            )
-        ) {
-
-            const rows =
-                paymentTermsContainer.querySelectorAll(
-                    ".payment-term-row"
-                );
-
-
-            if (rows.length > 1) {
-
-                event.target
-                    .closest(
-                        ".payment-term-row"
-                    )
-                    .remove();
-
-                updatePaymentTotal();
-
-            }
-
-        }
-
-    }
-);
-
-
-/* =========================================
-   FORM VALIDATION
-========================================= */
-
-form.addEventListener(
-    "submit",
-    event => {
-
-        const paymentTotal =
-            updatePaymentTotal();
-
-
-        if (paymentTotal !== 100) {
-
-            event.preventDefault();
-
-            paymentError.textContent =
-                "Payment terms must add up to exactly 100%.";
-
-            paymentError.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-
-            return;
-
-        }
-
-
-        paymentError.textContent = "";
-
-    }
-);
-
-
-/* =========================================
-   INITIALIZATION
-========================================= */
-
-document
-    .querySelectorAll(".item-row")
-    .forEach(row => {
-
-        updateItem(row);
-
+    document.querySelectorAll(".payment-term-percentage").forEach(input => {
+        total += parseFloat(input.value) || 0;
     });
 
+    paymentTotalDisplay.textContent = `${total}%`;
+    paymentTotalDisplay.classList.toggle("payment-total-valid", total === 100);
+    paymentTotalDisplay.classList.toggle("payment-total-invalid", total !== 100);
 
+    return total;
+}
+
+/* Payment terms: add */
+document.getElementById("add-payment-term").addEventListener("click", () => {
+    paymentTermsContainer.appendChild(createPaymentTermRow());
+});
+
+/* Payment terms: enable percentage only once a type is chosen */
+paymentTermsContainer.addEventListener("change", event => {
+    if (!event.target.classList.contains("payment-term-type")) {
+        return;
+    }
+
+    const row = event.target.closest(".payment-term-row");
+    const percentage = row.querySelector(".payment-term-percentage");
+
+    percentage.disabled = !event.target.value;
+
+    if (!event.target.value) {
+        percentage.value = "";
+        percentage.placeholder = "Select Type first";
+    } else {
+        percentage.placeholder = "Enter percentage";
+    }
+
+    updatePaymentTotal();
+});
+
+/* Payment terms: recalculate as percentages change */
+paymentTermsContainer.addEventListener("input", event => {
+    if (event.target.classList.contains("payment-term-percentage")) {
+        updatePaymentTotal();
+    }
+});
+
+/* Payment terms: remove (keep at least one row) */
+paymentTermsContainer.addEventListener("click", event => {
+    if (event.target.classList.contains("remove-payment-term-button")) {
+        if (paymentTermsContainer.querySelectorAll(".payment-term-row").length > 1) {
+            event.target.closest(".payment-term-row").remove();
+            updatePaymentTotal();
+        }
+    }
+});
+
+/* Block submit unless payment terms sum to exactly 100% */
+form.addEventListener("submit", event => {
+    if (updatePaymentTotal() !== 100) {
+        event.preventDefault();
+        paymentError.textContent = "Payment terms must add up to exactly 100%.";
+        paymentError.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+    }
+    paymentError.textContent = "";
+});
+
+/* Initialization */
+document.querySelectorAll(".item-row").forEach(updateItem);
 updatePaymentTotal();
-
 </script>
 
 </body>
