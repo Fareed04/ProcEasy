@@ -8,7 +8,7 @@ __pycache__/
 
 # Django
 db.sqlite3
-media/
+dataset/
 
 # Environment variables
 .env
