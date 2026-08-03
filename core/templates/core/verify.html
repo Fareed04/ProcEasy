@@ -13,7 +13,12 @@
 
 <div class="verification-container">
 
-    <h1>Invoice Verification</h1>
+    <div class="verification-header">
+        <h1>Invoice Verification</h1>
+        {% if total_count %}
+        <span class="progress-counter">{{ verified_count }} / {{ total_count }} verified</span>
+        {% endif %}
+    </div>
 
     <div class="verification-grid">
 
@@ -147,6 +152,15 @@
 
                     <div id="payment-error" class="form-error"></div>
 
+                </div>
+
+                <!-- Handwritten flag -->
+                <div class="form-group handwritten-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_handwritten"
+                               {% if invoice.is_handwritten %}checked{% endif %}>
+                        Handwritten invoice
+                    </label>
                 </div>
 
                 <!-- Submit -->

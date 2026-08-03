@@ -8,11 +8,13 @@ class InvoiceRecordAdmin(admin.ModelAdmin):
     list_display = (
         "vendor_name",
         "verification_status",
+        "is_handwritten",
         "created_at",
     )
 
     list_filter = (
         "verified",
+        "is_handwritten",
         "created_at",
     )
 

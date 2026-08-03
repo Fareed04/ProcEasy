@@ -13,7 +13,20 @@
 
 <div class="container">
 
-    <h1>PDF Text Extractor</h1>
+    <div class="verification-header">
+        <h1>PDF Text Extractor</h1>
+        {% if total_count %}
+        <span class="progress-counter">{{ verified_count }} / {{ total_count }} verified</span>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="message-success">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
 
     <!-- File upload -->
     <form method="POST" enctype="multipart/form-data">
