@@ -28,6 +28,64 @@ h1 {
     display: none;
 }
 
+/* Page header: title + progress counter side by side */
+.verification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.verification-header h1 {
+    margin: 0;
+}
+
+.progress-counter {
+    padding: 0.35rem 0.85rem;
+    background: #eef6ff;
+    border: 1px solid #cfe5f8;
+    border-radius: 999px;
+    color: #2980b9;
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Flash messages (e.g. "Verified and saved: ...") */
+.messages {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.message-success {
+    padding: 0.7rem 1rem;
+    background: #ecfdf5;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    color: #166534;
+    font-weight: 600;
+}
+
+/* Handwritten checkbox */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #34495e;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 1.05rem;
+    height: 1.05rem;
+    cursor: pointer;
+}
+
 /* =========================================================
    INDEX — PDF TEXT EXTRACTOR
    ========================================================= */

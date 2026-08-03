@@ -2,6 +2,7 @@ import os
 import tempfile
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.utils import timezone
@@ -19,6 +20,17 @@ def _remove_temp_file(path):
     """Delete a staged temp file if it still exists (best effort)."""
     if path and os.path.exists(path):
         os.remove(path)
+
+
+def _progress_counts():
+    """Verified-vs-total tallies for the labelling progress counter.
+
+    Total is intentionally dynamic -- there is no fixed target, since new
+    invoices arrive continuously.
+    """
+    total = InvoiceRecord.objects.count()
+    verified = InvoiceRecord.objects.filter(verified=True).count()
+    return {"verified_count": verified, "total_count": total}
 
 
 def _collect_invoice_data(request):
@@ -114,7 +126,7 @@ def pdf_upload(request):
 
         return redirect("verify_draft")
 
-    return render(request, "core/index.html")
+    return render(request, "core/index.html", _progress_counts())
 
 
 def verify_draft(request):
@@ -147,6 +159,7 @@ def verify_draft(request):
             extracted_text=draft["extracted_text"],
             parsed_data=verified_data,
             verified=True,
+            is_handwritten=bool(request.POST.get("is_handwritten")),
             verified_at=timezone.now(),
         )
 
@@ -154,7 +167,11 @@ def verify_draft(request):
         _remove_temp_file(temp_path)
         del request.session[DRAFT_SESSION_KEY]
 
-        return redirect("verify_invoice", pk=invoice.id)
+        # Continuous flow: confirm, then go straight back to upload so the
+        # next invoice can be labelled without extra navigation.
+        vendor = verified_data["invoice"]["vendor"] or f"Invoice #{invoice.id}"
+        messages.success(request, f"Verified and saved: {vendor}.")
+        return redirect("pdf_upload")
 
     return render(
         request,
@@ -164,6 +181,7 @@ def verify_draft(request):
             # {{ invoice.extracted_text }} lookup works unchanged.
             "invoice": {"extracted_text": draft["extracted_text"]},
             "invoice_data": draft["parsed_data"] or {},
+            **_progress_counts(),
         },
     )
 
@@ -175,6 +193,7 @@ def verify_invoice(request, pk):
 
     if request.method == "POST":
         invoice.parsed_data = _collect_invoice_data(request)
+        invoice.is_handwritten = bool(request.POST.get("is_handwritten"))
         invoice.verified = True
         invoice.verified_at = timezone.now()
         invoice.save()
@@ -187,5 +206,6 @@ def verify_invoice(request, pk):
         {
             "invoice": invoice,
             "invoice_data": invoice.parsed_data or {},
+            **_progress_counts(),
         },
     )
