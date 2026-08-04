@@ -575,3 +575,151 @@ h1 {
         width: 100%;
     }
 }
+
+/* =========================================================
+   MOTION — entrances, hovers, focus (micro-animations)
+
+   Refined, fast, and restrained: this is a high-repetition
+   labelling tool, so motion stays subtle and quick. All of it
+   is pure CSS -- dynamic rows animate on insert automatically
+   because a freshly-cloned element runs its keyframes on mount.
+   ========================================================= */
+
+/* ---- Entry keyframes ---- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes rowEnter {
+    from { opacity: 0; transform: translateY(-6px) scale(0.995); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes flashIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* ---- Page + panel entrances ---- */
+.container,
+.verification-container {
+    animation: fadeIn 0.4s ease-out both;
+}
+
+/* Cards settle in with a gentle stagger */
+.verification-grid > .verification-card {
+    animation: fadeInUp 0.5s ease-out both;
+}
+
+.verification-grid > .verification-card:nth-child(2) {
+    animation-delay: 0.08s;
+}
+
+.output-box {
+    animation: fadeInUp 0.4s ease-out both;
+}
+
+/* Success flash slides in to catch the eye between records */
+.message-success {
+    animation: flashIn 0.4s ease-out both;
+}
+
+/* Dynamically cloned rows fade in as they're added */
+.item-row,
+.payment-term-row {
+    animation: rowEnter 0.32s ease-out both;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* The row you're editing gets a subtle highlight */
+.item-row:hover,
+.payment-term-row:hover {
+    border-color: #cfe5f8;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+}
+
+/* Smooth the payment-total valid/invalid state change */
+.payment-total-display {
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* Smooth the progress pill and flash colours */
+.progress-counter {
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* ---- Buttons: unified transitions, hover lift, press, focus ---- */
+.container button[type="submit"],
+.toggle-btn,
+.add-item-button,
+.remove-item-button,
+.remove-payment-term-button,
+.verify-button,
+.file-label {
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.container button[type="submit"]:hover,
+.toggle-btn:hover,
+.add-item-button:hover,
+.remove-item-button:hover,
+.remove-payment-term-button:hover,
+.file-label:hover,
+.verify-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
+}
+
+.container button[type="submit"]:active,
+.toggle-btn:active,
+.add-item-button:active,
+.remove-item-button:active,
+.remove-payment-term-button:active,
+.file-label:active,
+.verify-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+/* Keyboard focus rings -- visible for keyboard users, not on mouse click */
+.container button[type="submit"]:focus-visible,
+.toggle-btn:focus-visible,
+.add-item-button:focus-visible,
+.remove-item-button:focus-visible,
+.remove-payment-term-button:focus-visible,
+.verify-button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.4);
+}
+
+.container input[type="file"]:focus-visible,
+.checkbox-label input[type="checkbox"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.35);
+}
+
+.checkbox-label {
+    transition: color 0.2s ease;
+}
+
+.checkbox-label:hover {
+    color: #2c3e50;
+}
+
+/* ---- Respect reduced-motion preferences ---- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
