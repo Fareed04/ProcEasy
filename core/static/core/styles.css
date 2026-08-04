@@ -3,7 +3,55 @@
    Used by:
      - index.html   (PDF Text Extractor)
      - verify.html  (Invoice Verification)
+
+   Design system: one confident accent, a disciplined neutral
+   scale, semantic colours held in reserve, and restrained
+   motion. This is a high-repetition data-entry tool, so the
+   surface stays quiet and the typed values stay legible.
    ========================================================= */
+
+/* ---------- Design tokens ---------- */
+:root {
+    /* Neutral scale (slate) */
+    --c-bg: #f6f8fb;
+    --c-surface: #ffffff;
+    --c-surface-sunken: #f7f9fc;
+    --c-border: #e6eaf0;
+    --c-border-strong: #d3dae5;
+
+    --c-ink: #1e293b;      /* primary text */
+    --c-ink-soft: #475569; /* secondary text */
+    --c-ink-muted: #8a97a8;/* labels, hints */
+
+    /* One accent — a calm indigo used for focus, links, primary emphasis */
+    --c-accent: #4f6bed;
+    --c-accent-strong: #3f57d1;
+    --c-accent-tint: #eef1fe;
+    --c-accent-ring: rgba(79, 107, 237, 0.28);
+
+    /* Semantic — muted, used sparingly */
+    --c-success: #15803d;
+    --c-success-tint: #edfaf1;
+    --c-success-border: #c3ebd1;
+    --c-danger: #b3261e;
+    --c-danger-tint: #fdf0ef;
+    --c-danger-border: #f2c9c5;
+
+    /* Radii */
+    --r-sm: 8px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-pill: 999px;
+
+    /* Elevation — soft and singular, not stacked heavy shadows */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04),
+        0 10px 30px rgba(15, 23, 42, 0.06);
+
+    /* Motion — strong custom easing beats the weak CSS built-ins */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
 
 /* ---------- Base ---------- */
 * {
@@ -13,15 +61,17 @@
 body {
     margin: 0;
     padding: 2rem;
-    background: #f8fafc;
-    color: #2c3e50;
+    background: var(--c-bg);
+    color: var(--c-ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         Helvetica, Arial, sans-serif;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-    color: #2c3e50;
+    color: var(--c-ink);
+    letter-spacing: -0.02em;
 }
 
 .hidden {
@@ -35,22 +85,25 @@ h1 {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .verification-header h1 {
     margin: 0;
+    font-size: 1.6rem;
 }
 
 .progress-counter {
     padding: 0.35rem 0.85rem;
-    background: #eef6ff;
-    border: 1px solid #cfe5f8;
-    border-radius: 999px;
-    color: #2980b9;
-    font-size: 0.9rem;
-    font-weight: 700;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-pill);
+    color: var(--c-ink-soft);
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
+    box-shadow: var(--shadow-sm);
 }
 
 /* Flash messages (e.g. "Verified and saved: ...") */
@@ -61,28 +114,37 @@ h1 {
 }
 
 .message-success {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.7rem 1rem;
-    background: #ecfdf5;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
-    color: #166534;
+    background: var(--c-success-tint);
+    border: 1px solid var(--c-success-border);
+    border-radius: var(--r-sm);
+    color: var(--c-success);
     font-weight: 600;
+}
+
+.message-success::before {
+    content: "✓";
+    font-weight: 700;
 }
 
 /* Handwritten checkbox */
 .checkbox-label {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #34495e;
+    gap: 0.55rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--c-ink-soft);
     cursor: pointer;
 }
 
 .checkbox-label input[type="checkbox"] {
     width: 1.05rem;
     height: 1.05rem;
+    accent-color: var(--c-accent);
     cursor: pointer;
 }
 
@@ -94,9 +156,10 @@ h1 {
     max-width: 900px;
     margin: 0 auto;
     padding: 2rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
 }
 
 .container h1 {
@@ -114,10 +177,10 @@ h1 {
 
 .file-label {
     padding: 0.6rem 1rem;
-    background: #eef6ff;
-    border: 1px solid #cfe5f8;
-    border-radius: 7px;
-    color: #2c3e50;
+    background: var(--c-accent-tint);
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    color: var(--c-accent-strong);
     font-weight: 600;
     cursor: pointer;
 }
@@ -126,55 +189,54 @@ h1 {
     flex: 1;
     min-width: 200px;
     padding: 0.5rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    background: #ffffff;
-    color: #2c3e50;
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
+    background: var(--c-surface);
+    color: var(--c-ink);
 }
 
 .container button[type="submit"] {
     padding: 0.6rem 1.2rem;
-    background: #27ae60;
+    background: var(--c-accent);
     color: #ffffff;
     border: none;
-    border-radius: 7px;
+    border-radius: var(--r-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
 }
 
 .container button[type="submit"]:hover {
-    background: #219150;
+    background: var(--c-accent-strong);
 }
 
 .toggle-btn {
     margin: 1rem 0;
     padding: 0.55rem 1rem;
-    background: #3498db;
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
+    background: var(--c-surface);
+    color: var(--c-ink-soft);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
 }
 
 .toggle-btn:hover {
-    background: #2980b9;
+    background: var(--c-surface-sunken);
+    color: var(--c-ink);
 }
 
 /* Output boxes */
 .output-box {
     margin-top: 1.5rem;
     padding: 1.25rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
 }
 
 .output-box h2 {
     margin-top: 0;
-    color: #2c3e50;
+    color: var(--c-ink);
     font-size: 1.1rem;
 }
 
@@ -183,7 +245,7 @@ h1 {
     word-wrap: break-word;
     margin: 0;
     font-size: 0.85rem;
-    color: #34495e;
+    color: var(--c-ink-soft);
 }
 
 /* Parsed data tables */
@@ -195,15 +257,15 @@ h1 {
 
 .output-box th,
 .output-box td {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--c-border);
     padding: 0.55rem 0.7rem;
     text-align: left;
     font-size: 0.9rem;
 }
 
 .output-box th {
-    background: #f4f6f8;
-    color: #34495e;
+    background: var(--c-surface-sunken);
+    color: var(--c-ink-soft);
     font-weight: 700;
 }
 
@@ -222,29 +284,37 @@ h1 {
 
 .verification-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.4fr);
     gap: 1.5rem;
     align-items: start;
 }
 
 .verification-card {
     padding: 1.5rem;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
 }
 
 .verification-card h2 {
     margin-top: 0;
-    color: #2c3e50;
-    font-size: 1.25rem;
+    color: var(--c-ink);
+    font-size: 1.2rem;
+    letter-spacing: -0.01em;
 }
 
 .instruction {
     margin-top: -0.25rem;
     margin-bottom: 1.25rem;
-    color: #64748b;
+    color: var(--c-ink-muted);
     font-size: 0.9rem;
+}
+
+/* Keep the source text in view while scrolling the long form */
+.extracted-card {
+    position: sticky;
+    top: 1.5rem;
 }
 
 /* Extracted text panel */
@@ -252,17 +322,20 @@ h1 {
     max-height: 70vh;
     overflow: auto;
     padding: 1rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-sm);
 }
 
 .extracted-text pre {
     white-space: pre-wrap;
     word-wrap: break-word;
     margin: 0;
-    font-size: 0.85rem;
-    color: #34495e;
+    font-family: "SFMono-Regular", ui-monospace, "Cascadia Code",
+        "Consolas", monospace;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--c-ink-soft);
 }
 
 /* =========================================================
@@ -275,19 +348,27 @@ h1 {
     gap: 1.5rem;
 }
 
-/* Sections */
+/* Sections — separated by a hairline + heading rather than a
+   nested filled box, so the form doesn't read as boxes-in-boxes. */
 .form-section {
-    padding: 1.25rem;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-top: 1px solid var(--c-border);
+    padding-top: 1.35rem;
+}
+
+.form-section:first-child {
+    border-top: none;
+    padding-top: 0;
 }
 
 .form-section h3 {
     margin: 0 0 1rem;
-    color: #2c3e50;
-    font-size: 1.1rem;
+    color: var(--c-ink);
+    font-size: 0.95rem;
     font-weight: 700;
+    letter-spacing: -0.005em;
 }
 
 /* Section header (title + add button) */
@@ -325,11 +406,28 @@ h1 {
     margin-bottom: 0;
 }
 
-.form-group label,
-.section-header + * label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #34495e;
+.form-group label:not(.checkbox-label),
+.section-header + * label:not(.checkbox-label) {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+    color: var(--c-ink-muted);
+}
+
+/* "auto" badge on derived fields (subtotal, grand total) */
+.field-note {
+    padding: 0.05rem 0.4rem;
+    background: var(--c-accent-tint);
+    border-radius: var(--r-pill);
+    color: var(--c-accent-strong);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 /* Groups inside a form-row/item-row shouldn't double up bottom margin */
@@ -344,37 +442,57 @@ h1 {
 #invoice-form input[type="number"],
 #invoice-form select {
     width: 100%;
-    padding: 0.7rem 0.8rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 7px;
-    background: #ffffff;
-    color: #2c3e50;
-    font-size: 0.9rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
+    background: var(--c-surface);
+    color: var(--c-ink);
+    font-size: 0.92rem;
+    transition: border-color 0.16s var(--ease-out),
+        box-shadow 0.16s var(--ease-out);
+}
+
+#invoice-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238a97a8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
 }
 
 #invoice-form input[type="text"]:focus,
 #invoice-form input[type="number"]:focus,
 #invoice-form select:focus {
     outline: none;
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px var(--c-accent-ring);
 }
 
 #invoice-form input::placeholder {
-    color: #94a3b8;
+    color: var(--c-ink-muted);
 }
 
+/* Money and quantity fields read like a ledger: right-aligned digits that
+   line up column-to-column, so large Naira figures stay legible as typed. */
+#invoice-form input[type="number"] {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+/* Derived / read-only fields: clearly not editable, still readable */
 #invoice-form input[readonly] {
-    background: #f1f5f9;
-    color: #475569;
+    background: var(--c-surface-sunken);
+    border-color: var(--c-border);
+    color: var(--c-ink);
     font-weight: 600;
+    cursor: default;
 }
 
 #invoice-form input:disabled,
 #invoice-form select:disabled {
-    background: #f1f5f9;
-    color: #94a3b8;
+    background: var(--c-surface-sunken);
+    color: var(--c-ink-muted);
     cursor: not-allowed;
 }
 
@@ -384,30 +502,34 @@ h1 {
 
 .item-row {
     display: grid;
-    grid-template-columns: 2fr 2fr 1fr 1fr 1fr auto;
+    grid-template-columns:
+        minmax(120px, 1.2fr) minmax(140px, 1.5fr)
+        92px 124px 128px auto;
     gap: 0.75rem;
     align-items: end;
     padding: 1rem;
     margin-bottom: 0.75rem;
-    background: #ffffff;
-    border: 1px solid #dbe2e8;
-    border-radius: 9px;
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
 }
 
 .item-row:last-child {
     margin-bottom: 0;
 }
 
+/* Tighter padding inside row cells so numbers stay fully visible */
+.item-row input,
+.payment-term-row input,
+.payment-term-row select {
+    padding-left: 0.6rem !important;
+    padding-right: 0.55rem !important;
+}
+
 /* Column hints — the grid template above drives widths, these keep
-   the name/description fields prominent when the grid collapses. */
-.item-name-field {
-    min-width: 0;
-}
-
-.item-description-field {
-    min-width: 0;
-}
-
+   the name/description fields from forcing a min-content overflow. */
+.item-name-field,
+.item-description-field,
 .small-field {
     min-width: 0;
 }
@@ -423,9 +545,9 @@ h1 {
     align-items: end;
     padding: 1rem;
     margin-bottom: 0.75rem;
-    background: #ffffff;
-    border: 1px solid #dbe2e8;
-    border-radius: 9px;
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
 }
 
 .payment-term-row:last-child {
@@ -434,83 +556,91 @@ h1 {
 
 /* Payment terms total indicator */
 .payment-total-display {
-    padding: 0.7rem 0.8rem;
-    background: #eef6ff;
-    border: 1px solid #cfe5f8;
-    border-radius: 7px;
-    color: #2c3e50;
+    padding: 0.6rem 0.75rem;
+    background: var(--c-surface-sunken);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
+    color: var(--c-ink);
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .payment-total-display.payment-total-valid {
-    background: #ecfdf5;
-    border-color: #bbf7d0;
-    color: #166534;
+    background: var(--c-success-tint);
+    border-color: var(--c-success-border);
+    color: var(--c-success);
 }
 
 .payment-total-display.payment-total-invalid {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
+    background: var(--c-danger-tint);
+    border-color: var(--c-danger-border);
+    color: var(--c-danger);
 }
 
 /* =========================================================
    VERIFY — BUTTONS
    ========================================================= */
 
+/* Secondary "add" actions: quiet outline, not another bright fill */
 .add-item-button {
-    padding: 0.5rem 0.9rem;
-    background: #3498db;
-    color: #ffffff;
-    border: none;
-    border-radius: 7px;
+    padding: 0.5rem 0.85rem;
+    background: var(--c-surface);
+    color: var(--c-accent-strong);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
 }
 
 .add-item-button:hover {
-    background: #2980b9;
+    background: var(--c-accent-tint);
+    border-color: var(--c-accent);
 }
 
+/* Destructive "remove": neutral by default, reveals danger on hover
+   so a wall of red buttons doesn't dominate the form. */
 .remove-item-button,
 .remove-payment-term-button {
-    padding: 0.55rem 0.8rem;
-    background: #e74c3c;
-    color: #ffffff;
-    border: none;
-    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    background: var(--c-surface);
+    color: var(--c-ink-muted);
+    border: 1px solid var(--c-border-strong);
+    border-radius: var(--r-sm);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
 }
 
 .remove-item-button:hover,
 .remove-payment-term-button:hover {
-    background: #c0392b;
+    background: var(--c-danger-tint);
+    border-color: var(--c-danger-border);
+    color: var(--c-danger);
 }
 
+/* Primary commit action — the one place bright, confident fill belongs */
 .verify-button {
     width: 100%;
-    padding: 0.9rem 1.5rem;
-    background: #27ae60;
+    padding: 0.85rem 1.5rem;
+    background: var(--c-success);
     color: #ffffff;
     border: none;
-    border-radius: 8px;
-    font-size: 1rem;
+    border-radius: var(--r-md);
+    font-size: 0.98rem;
     font-weight: 600;
+    letter-spacing: 0.01em;
     cursor: pointer;
-    transition: background 0.2s ease;
+    box-shadow: var(--shadow-sm);
 }
 
-.verify-button:hover {
-    background: #219150;
+.verify-button:hover:not(:disabled) {
+    background: #12692f;
 }
 
 .verify-button:disabled {
-    background: #95a5a6;
+    background: var(--c-border-strong);
+    color: var(--c-surface);
     cursor: not-allowed;
 }
 
@@ -520,7 +650,7 @@ h1 {
 
 .form-error {
     margin-top: 0.75rem;
-    color: #991b1b;
+    color: var(--c-danger);
     font-size: 0.85rem;
     font-weight: 600;
 }
@@ -537,6 +667,10 @@ h1 {
 
     .verification-grid {
         grid-template-columns: 1fr;
+    }
+
+    .extracted-card {
+        position: static;
     }
 
     .item-row {
@@ -609,52 +743,55 @@ h1 {
 /* ---- Page + panel entrances ---- */
 .container,
 .verification-container {
-    animation: fadeIn 0.4s ease-out both;
+    animation: fadeIn 0.4s var(--ease-out) both;
 }
 
 /* Cards settle in with a gentle stagger */
 .verification-grid > .verification-card {
-    animation: fadeInUp 0.5s ease-out both;
+    animation: fadeInUp 0.5s var(--ease-out) both;
 }
 
 .verification-grid > .verification-card:nth-child(2) {
-    animation-delay: 0.08s;
+    animation-delay: 0.07s;
 }
 
 .output-box {
-    animation: fadeInUp 0.4s ease-out both;
+    animation: fadeInUp 0.4s var(--ease-out) both;
 }
 
 /* Success flash slides in to catch the eye between records */
 .message-success {
-    animation: flashIn 0.4s ease-out both;
+    animation: flashIn 0.4s var(--ease-out) both;
 }
 
 /* Dynamically cloned rows fade in as they're added */
 .item-row,
 .payment-term-row {
-    animation: rowEnter 0.32s ease-out both;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    animation: rowEnter 0.32s var(--ease-out) both;
+    transition: border-color 0.18s var(--ease-out),
+        box-shadow 0.18s var(--ease-out);
 }
 
-/* The row you're editing gets a subtle highlight */
+/* The row you're editing lifts off the surface subtly */
 .item-row:hover,
 .payment-term-row:hover {
-    border-color: #cfe5f8;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    border-color: var(--c-border-strong);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Smooth the payment-total valid/invalid state change */
 .payment-total-display {
-    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    transition: background 0.25s var(--ease-out),
+        border-color 0.25s var(--ease-out), color 0.25s var(--ease-out);
 }
 
-/* Smooth the progress pill and flash colours */
+/* Smooth the progress pill colours */
 .progress-counter {
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition: background 0.2s var(--ease-out),
+        border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
 }
 
-/* ---- Buttons: unified transitions, hover lift, press, focus ---- */
+/* ---- Buttons: unified transitions, press feedback, focus ---- */
 .container button[type="submit"],
 .toggle-btn,
 .add-item-button,
@@ -662,20 +799,13 @@ h1 {
 .remove-payment-term-button,
 .verify-button,
 .file-label {
-    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    transition: background 0.18s var(--ease-out),
+        border-color 0.18s var(--ease-out),
+        transform 0.12s var(--ease-out), box-shadow 0.18s var(--ease-out);
 }
 
-.container button[type="submit"]:hover,
-.toggle-btn:hover,
-.add-item-button:hover,
-.remove-item-button:hover,
-.remove-payment-term-button:hover,
-.file-label:hover,
-.verify-button:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.14);
-}
-
+/* Press feedback — every pressable element confirms the click.
+   scale(0.97) is subtle but makes the UI feel like it's listening. */
 .container button[type="submit"]:active,
 .toggle-btn:active,
 .add-item-button:active,
@@ -683,8 +813,7 @@ h1 {
 .remove-payment-term-button:active,
 .file-label:active,
 .verify-button:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+    transform: scale(0.97);
 }
 
 /* Keyboard focus rings -- visible for keyboard users, not on mouse click */
@@ -693,23 +822,24 @@ h1 {
 .add-item-button:focus-visible,
 .remove-item-button:focus-visible,
 .remove-payment-term-button:focus-visible,
-.verify-button:focus-visible {
+.verify-button:focus-visible,
+.file-label:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 0 0 3px var(--c-accent-ring);
 }
 
 .container input[type="file"]:focus-visible,
 .checkbox-label input[type="checkbox"]:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.35);
+    box-shadow: 0 0 0 3px var(--c-accent-ring);
 }
 
 .checkbox-label {
-    transition: color 0.2s ease;
+    transition: color 0.18s var(--ease-out);
 }
 
 .checkbox-label:hover {
-    color: #2c3e50;
+    color: var(--c-ink);
 }
 
 /* ---- Respect reduced-motion preferences ---- */
