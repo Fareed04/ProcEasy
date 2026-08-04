@@ -82,6 +82,7 @@ def _collect_invoice_data(request):
     return {
         "invoice": {
             "vendor": field("vendor"),
+            "cost_center": field("cost_center"),
             "currency": field("currency"),
             "subtotal": field("subtotal"),
             "tax": field("tax"),

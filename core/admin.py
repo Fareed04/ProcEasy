@@ -7,6 +7,7 @@ class InvoiceRecordAdmin(admin.ModelAdmin):
 
     list_display = (
         "vendor_name",
+        "cost_center",
         "verification_status",
         "is_handwritten",
         "created_at",
@@ -34,6 +35,16 @@ class InvoiceRecordAdmin(admin.ModelAdmin):
         ).get(
             "vendor",
             "Unknown"
+        )
+
+    @admin.display(description="Cost Center")
+    def cost_center(self, obj):
+        return obj.parsed_data.get(
+            "invoice",
+            {}
+        ).get(
+            "cost_center",
+            "—"
         )
 
     @admin.display(description="Status")

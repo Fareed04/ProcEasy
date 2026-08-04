@@ -53,6 +53,12 @@
                                value="{{ invoice_data.invoice.vendor|default:'' }}" required>
                     </div>
 
+                    <div class="form-group">
+                        <label for="cost_center">Cost Center</label>
+                        <input type="text" id="cost_center" name="cost_center"
+                               value="{{ invoice_data.invoice.cost_center|default:'' }}" required>
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="currency">Currency</label>
@@ -240,7 +246,7 @@ function updateItem(row) {
     const lineTotal = row.querySelector(".item-line-total");
 
     if (name && !description.dataset.edited) {
-        description.value = `This is for the purchase of ${name}`;
+        description.value = `This is the cost for ${name}`;
     }
 
     lineTotal.value = (quantity * unitPrice).toFixed(2);
