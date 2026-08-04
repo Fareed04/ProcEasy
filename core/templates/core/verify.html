@@ -73,9 +73,9 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="subtotal">Subtotal</label>
+                            <label for="subtotal">Subtotal <span class="field-note">auto</span></label>
                             <input type="number" step="0.01" min="0" id="subtotal" name="subtotal"
-                                   value="{{ invoice_data.invoice.subtotal|default:'' }}">
+                                   value="{{ invoice_data.invoice.subtotal|default:'' }}" readonly>
                         </div>
 
                         <div class="form-group">
@@ -113,9 +113,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="grand_total">Grand Total</label>
+                        <label for="grand_total">Grand Total <span class="field-note">auto</span></label>
                         <input type="number" step="0.01" min="0" id="grand_total" name="grand_total"
-                               value="{{ invoice_data.invoice.grand_total|default:'' }}">
+                               value="{{ invoice_data.invoice.grand_total|default:'' }}" readonly>
                     </div>
 
                 </div>
@@ -195,6 +195,33 @@ const paymentError = document.getElementById("payment-error");
 const itemRowTemplate = document.getElementById("item-row-template");
 const paymentTermTemplate = document.getElementById("payment-term-template");
 
+/* Totals: subtotal and grand total are derived, never typed */
+const subtotalInput = document.getElementById("subtotal");
+const grandTotalInput = document.getElementById("grand_total");
+const taxSelect = document.getElementById("tax");
+const taxGroupSelect = document.getElementById("tax_group");
+
+/* Pull the VAT percentage out of a tax-group label, e.g. "VAT 7.5% - FIRS" -> 7.5 */
+function vatRate() {
+    const match = (taxGroupSelect.value || "").match(/([\d.]+)\s*%/);
+    return match ? parseFloat(match[1]) : 0;
+}
+
+/* Subtotal = sum of line totals; Grand total = subtotal after tax.
+   Exclusive tax is added on top; Inclusive/N/A leave the subtotal as-is. */
+function recalcTotals() {
+    let subtotal = 0;
+    document.querySelectorAll(".item-line-total").forEach(input => {
+        subtotal += parseFloat(input.value) || 0;
+    });
+    subtotalInput.value = subtotal.toFixed(2);
+
+    const grand = taxSelect.value === "Exclusive"
+        ? subtotal * (1 + vatRate() / 100)
+        : subtotal;
+    grandTotalInput.value = grand.toFixed(2);
+}
+
 /* Row factories — clone the shared <template> markup, no duplicated HTML */
 function createItemRow() {
     return itemRowTemplate.content.firstElementChild.cloneNode(true);
@@ -235,6 +262,7 @@ document.getElementById("add-item").addEventListener("click", () => {
 itemsContainer.addEventListener("input", event => {
     if (event.target.matches(".item-name, .item-quantity, .item-unit-price")) {
         updateItem(event.target.closest(".item-row"));
+        recalcTotals();
     }
 });
 
@@ -243,9 +271,14 @@ itemsContainer.addEventListener("click", event => {
     if (event.target.classList.contains("remove-item-button")) {
         if (itemsContainer.querySelectorAll(".item-row").length > 1) {
             event.target.closest(".item-row").remove();
+            recalcTotals();
         }
     }
 });
+
+/* Totals: tax choices change the grand total */
+taxSelect.addEventListener("change", recalcTotals);
+taxGroupSelect.addEventListener("change", recalcTotals);
 
 /* Payment terms: total must equal 100% */
 function updatePaymentTotal() {
@@ -317,6 +350,7 @@ form.addEventListener("submit", event => {
 
 /* Initialization */
 document.querySelectorAll(".item-row").forEach(updateItem);
+recalcTotals();
 updatePaymentTotal();
 </script>
 
