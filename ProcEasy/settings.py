@@ -124,3 +124,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+
+# ---- OCR / extraction ----
+# Central config for the invoice text extractor (core/extraction/utils.py).
+# OCR_BACKEND selects the engine: "tesseract" (local, default) or
+# "google_docai" (cloud, not yet wired -- see GoogleDocAiBackend stub).
+OCR_BACKEND = "tesseract"
+
+# Windows install locations for the local Tesseract backend. Kept here so they
+# are configurable instead of buried as constants in the extractor.
+TESSERACT_CMD = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+POPPLER_PATH = r"C:\poppler\Library\bin"
+
+# Rasterization DPI for scanned pages that need OCR. 300 is the sweet spot for
+# Tesseract accuracy vs. speed; the old code used pdf2image's ~200 default.
+OCR_DPI = 300
+
+# A page whose embedded text layer has fewer than this many non-space
+# characters is treated as scanned and sent to OCR. This is what stops a tiny
+# annotation stamp ("OK to proceed" + date) from masking a scanned invoice.
+OCR_MIN_TEXT_CHARS = 40
