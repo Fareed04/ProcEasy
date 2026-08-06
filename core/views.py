@@ -48,6 +48,7 @@ def _collect_invoice_data(request):
     item_descriptions = request.POST.getlist("item_description[]")
     item_quantities = request.POST.getlist("item_quantity[]")
     item_unit_prices = request.POST.getlist("item_unit_price[]")
+    item_discounts = request.POST.getlist("item_discount[]")
     item_line_totals = request.POST.getlist("item_line_total[]")
 
     items = []
@@ -57,6 +58,7 @@ def _collect_invoice_data(request):
             "description": item_descriptions[i].strip() if i < len(item_descriptions) else "",
             "quantity": item_quantities[i].strip() if i < len(item_quantities) else "",
             "unit_price": item_unit_prices[i].strip() if i < len(item_unit_prices) else "",
+            "discount": item_discounts[i].strip() if i < len(item_discounts) else "",
             "line_total": item_line_totals[i].strip() if i < len(item_line_totals) else "",
         }
 

@@ -29,5 +29,6 @@ def empty_item():
         "description": "",
         "quantity": "",
         "unit_price": "",
+        "discount": "",
         "line_total": "",
     }
