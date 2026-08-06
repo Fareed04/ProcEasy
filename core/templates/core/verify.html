@@ -243,13 +243,16 @@ function updateItem(row) {
     const description = row.querySelector(".item-description");
     const quantity = parseFloat(row.querySelector(".item-quantity").value) || 0;
     const unitPrice = parseFloat(row.querySelector(".item-unit-price").value) || 0;
+    const discount = parseFloat(row.querySelector(".item-discount").value) || 0;
     const lineTotal = row.querySelector(".item-line-total");
 
     if (name && !description.dataset.edited) {
         description.value = `This is the cost for ${name}`;
     }
 
-    lineTotal.value = (quantity * unitPrice).toFixed(2);
+    // Discount is a fixed amount off each unit's price; never let it go negative.
+    const netUnitPrice = Math.max(unitPrice - discount, 0);
+    lineTotal.value = (quantity * netUnitPrice).toFixed(2);
 }
 
 /* Items: track manual description edits so we stop auto-filling */
@@ -266,7 +269,7 @@ document.getElementById("add-item").addEventListener("click", () => {
 
 /* Items: recalculate on relevant input */
 itemsContainer.addEventListener("input", event => {
-    if (event.target.matches(".item-name, .item-quantity, .item-unit-price")) {
+    if (event.target.matches(".item-name, .item-quantity, .item-unit-price, .item-discount")) {
         updateItem(event.target.closest(".item-row"));
         recalcTotals();
     }
