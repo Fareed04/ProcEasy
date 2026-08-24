@@ -42,9 +42,9 @@ SELECTORS = {
     "add_payment_term": "button:has-text('+')",          # the [+] add-row button
     "payment_type": "input[name='payment_term_type']",   # type field in a term row
     "payment_percentage": "input[name='payment_term_percentage']",  # % field
-    # RFQR screen:
-    "item_row": "tr.rfqr-item-row",                      # a pre-pulled item row
-    "unit_price": "input[name='unit_price']",            # price input within a row
+    # RFQR pricing grid -- live: one 1-indexed hidden rate input per row.
+    # {n} is the JSON row index + 1 (the grid numbering is 1-based).
+    "unit_price": "#svt_unit_rate_{n}_hidden",
 }
 
 
@@ -70,27 +70,30 @@ def fill_payment_terms(page: Page, payment_terms: list) -> None:
 
 
 def fill_unit_prices(page: Page, items: list) -> None:
-    """RFQR phase: type each item's unit_price into its on-screen row.
+    """RFQR phase: inject each line item's unit_price into its 1-indexed grid input.
 
-    Rows are matched to JSON items by position (row i <- items[i]); only the
-    overlapping range is filled, and any row/item count mismatch is reported
-    rather than silently ignored.
+    The live pricing grid exposes one rate input per row, addressed by a
+    1-indexed id: JSON row ``index`` (0-based) maps to
+    ``#svt_unit_rate_{index + 1}_hidden``. Each targeted field is cleared and
+    then filled with the JSON ``unit_price`` string.
     """
-    rows = page.locator(SELECTORS["item_row"])
-    row_count = rows.count()
-    if row_count != len(items):
-        print(f"  ! mismatch: {row_count} row(s) on screen vs {len(items)} item(s) in JSON")
-
     filled = 0
-    for i in range(min(row_count, len(items))):
-        price = str(items[i].get("unit_price", "")).strip()
+    for index, item in enumerate(items):
+        price = str(item.get("unit_price", "")).strip()
         if not price:
             continue
-        # .fill() sets the value and fires input/change events; swap for
-        # .press_sequentially() if the field needs real per-key keystrokes.
-        rows.nth(i).locator(SELECTORS["unit_price"]).fill(price)
-        print(f"  RFQR row {i + 1}: {items[i].get('item_name', '')} <- {price}")
+
+        selector = SELECTORS["unit_price"].format(n=index + 1)  # grid is 1-indexed
+        field = page.locator(selector)
+        if field.count() == 0:
+            print(f"  ! no grid input at {selector}; stopping after {filled} filled")
+            break
+
+        field.clear()       # clear any existing value ...
+        field.fill(price)   # ... then inject the JSON unit_price
+        print(f"  RFQR row {index + 1}: {item.get('item_name', '')} <- {price}")
         filled += 1
+
     print(f"RFQR phase: filled {filled} price field(s).")
 
 
