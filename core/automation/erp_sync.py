@@ -50,6 +50,9 @@ SELECTORS = {
     # RFQR pricing grid -- live: one 1-indexed hidden rate input per row.
     # {n} is the JSON row index + 1 (the grid numbering is 1-based).
     "unit_price": "#svt_unit_rate_{n}_hidden",
+    # The visible display cell for the same row -- same 1-indexed marker,
+    # without the `_hidden` suffix. Both it and the hidden input get written.
+    "unit_price_cell": "#svt_unit_rate_{n}",
 }
 
 
@@ -59,17 +62,45 @@ def load_invoice(path=INVOICE_PATH) -> dict:
         return json.load(fh)
 
 
-def fill_unit_prices(page: Page, items: list) -> None:
-    """RFQR phase: inject each line item's unit_price into its 1-indexed grid input.
+# JS run in the page to write a value into a grid input and notify the grid.
+INJECT_JS = (
+    "(el, val) => {"
+    " el.value = val;"
+    " el.dispatchEvent(new Event('input', { bubbles: true }));"
+    " el.dispatchEvent(new Event('change', { bubbles: true }));"
+    " }"
+)
 
-    The live pricing grid exposes one rate input per row, addressed by a
-    1-indexed id: JSON row ``index`` (0-based) maps to
-    ``#svt_unit_rate_{index + 1}_hidden``. These inputs stay hidden until
-    focused, so Playwright's visibility-gated ``fill()`` cannot reach the
-    rows past the first. Instead we run a native browser evaluation that force-
-    injects the price into ``el.value`` and manually dispatches ``input`` and
-    ``change`` (both bubbling) so the grid registers the edit and recalculates
-    totals. This value write is the ONLY DOM mutation the script performs --
+
+def _inject_value(page: Page, selector: str, price: str) -> bool:
+    """Force-set ``el.value`` and dispatch bubbling input+change on one selector.
+
+    Returns True if the element existed and the injection ran. A missing
+    selector or a failed evaluation is reported and swallowed so the caller
+    keeps going across the remaining rows.
+    """
+    field = page.locator(selector)
+    if field.count() == 0:
+        print(f"  - selector absent, skipping: {selector}")
+        return False
+    try:
+        field.evaluate(INJECT_JS, price)
+        return True
+    except Exception as exc:
+        print(f"  ~ inject failed for {selector}: {exc}")
+        return False
+
+
+def fill_unit_prices(page: Page, items: list) -> None:
+    """RFQR phase: inject each line item's unit_price into its 1-indexed grid row.
+
+    Both ``#svt_unit_rate_{n}`` (display cell) and ``#svt_unit_rate_{n}_hidden``
+    (backing input) co-exist per row and throw visibility timeouts on physical
+    interaction, so for each row we write to BOTH via a native browser
+    evaluation: force-set ``el.value`` and dispatch bubbling ``input`` and
+    ``change`` events so the grid registers the edit and recalculates totals.
+    Missing selectors are logged and skipped -- the loop always runs across
+    every item. This value write is the ONLY DOM mutation the script performs;
     it never clicks, saves, or submits.
     """
     filled = 0
@@ -78,25 +109,16 @@ def fill_unit_prices(page: Page, items: list) -> None:
         if not price:
             continue
 
-        selector = SELECTORS["unit_price"].format(n=index + 1)  # grid is 1-indexed
-        field = page.locator(selector)
-        if field.count() == 0:
-            print(f"  ! no grid input at {selector}; stopping after {filled} filled")
-            break
-
-        # Force-inject the value: these inputs are hidden until focused, so
-        # fill() is blocked on visibility. Set el.value directly, then fire the
-        # bubbling input+change events the grid listens on to recalc totals.
-        field.evaluate(
-            "(el, val) => {"
-            " el.value = val;"
-            " el.dispatchEvent(new Event('input', { bubbles: true }));"
-            " el.dispatchEvent(new Event('change', { bubbles: true }));"
-            " }",
-            price,
-        )
-        print(f"  RFQR row {index + 1}: {item.get('item_name', '')} <- {price}")
-        filled += 1
+        n = index + 1  # grid is 1-indexed
+        # Target both the display cell and its hidden backing input for the row.
+        selectors = [
+            SELECTORS["unit_price_cell"].format(n=n),  # #svt_unit_rate_{n}
+            SELECTORS["unit_price"].format(n=n),       # #svt_unit_rate_{n}_hidden
+        ]
+        injected = [sel for sel in selectors if _inject_value(page, sel, price)]
+        if injected:
+            print(f"  RFQR row {n}: {item.get('item_name', '')} <- {price}")
+            filled += 1
 
     print(f"RFQR phase: filled {filled} price field(s).")
 
