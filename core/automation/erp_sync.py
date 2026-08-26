@@ -110,6 +110,16 @@ def fill_unit_prices(page: Page, items: list) -> None:
             continue
 
         n = index + 1  # grid is 1-indexed
+
+        # Force-focus click on the hidden input to mount the row's fields; the
+        # grid blocks physical clicks, so force=True bypasses the visibility
+        # gate. Best-effort so the loop still runs across every row.
+        try:
+            page.locator(SELECTORS["unit_price"].format(n=n)).click(force=True)
+            page.wait_for_timeout(100)  # let the ERP JS mount the row values
+        except Exception as exc:
+            print(f"  ~ force-focus click skipped for row {n}: {exc}")
+
         # Target both the display cell and its hidden backing input for the row.
         selectors = [
             SELECTORS["unit_price_cell"].format(n=n),  # #svt_unit_rate_{n}
