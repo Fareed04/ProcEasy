@@ -1,0 +1,47 @@
+{
+  "invoice": {
+    "vendor": "JENILES INTERNATIONAL LTD",
+    "cost_center": "",
+    "currency": "NGN",
+    "subtotal": "320000",
+    "tax": "",
+    "tax_group": "",
+    "wht": "",
+    "grand_total": "320000"
+  },
+  "items": [
+    {
+      "item_name": "DOWEL INVERTER CONTROL FORK",
+      "description": "SUPPLY OF DOWEL INVERTER CONTROL",
+      "quantity": "1",
+      "unit_price": "80000",
+      "discount": "0",
+      "line_total": "80000"
+    },
+    {
+      "item_name": "INVERTER CONTROL COMPASS",
+      "description": "Inv 1189 (07/08/25) · Consumable · unit: pcs",
+      "quantity": "1",
+      "unit_price": "90000",
+      "discount": "0",
+      "line_total": "90000"
+    },
+    {
+      "item_name": "Bulbs H3",
+      "description": "Inv 1189 (07/08/25) · Consumable · unit: pcs",
+      "quantity": "1",
+      "unit_price": "85000",
+      "discount": "0",
+      "line_total": "85000"
+    },
+    {
+      "item_name": "Bulbs H4",
+      "description": "Inv 1189 (07/08/25) · Consumable · unit: pcs",
+      "quantity": "12",
+      "unit_price": "65000",
+      "discount": "0",
+      "line_total": "65000"
+    }
+  ],
+  "payment_terms": []
+}
