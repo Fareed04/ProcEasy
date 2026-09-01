@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "ProcEasy Clipboard Assistant",
+  "version": "0.1.0",
+  "description": "Floating ProcEasy widget that surfaces deduplicated invoice line items with one-click copy.",
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["data.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
