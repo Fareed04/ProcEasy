@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProcEasy Assistant</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    html, body { margin: 0; }
+    body { width: 340px; background: #f8fafc; color: #0f172a; font-size: 16px; }
+    .head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: #0f172a; color: #fff; }
+    .head__dot { width: 18px; height: 18px; border-radius: 24%; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.9); }
+    .head__title { font-size: 20px; font-weight: 600; }
+    .head__spin { margin-left: auto; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); border-top-color: #0a84ff; animation: spin .8s linear infinite; display: none; }
+    .head__spin.on { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #view { padding: 12px; max-height: 460px; overflow-y: auto; }
+
+    .dropzone { border: 2px dashed #93c5fd; border-radius: 12px; padding: 34px 16px; text-align: center; color: #475569; background: #fff; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+    .dropzone.dragover { background: #eff6ff; border-color: #2563eb; color: #2563eb; }
+    .dropzone__title { font-size: 16px; font-weight: 600; }
+    .dropzone__hint { font-size: 12px; margin-top: 8px; color: #94a3b8; }
+
+    .gridbar { display: flex; justify-content: flex-end; margin-bottom: 6px; }
+    .linkbtn { cursor: pointer; background: transparent; border: 0; color: #2563eb; font-size: 12px; font-weight: 600; }
+    .note { font-size: 12px; color: #64748b; background: #eef2f7; border-radius: 8px; padding: 7px 10px; margin-bottom: 10px; }
+    .item { padding: 10px 0; border-bottom: 1px solid #eef2f7; }
+    .item:last-child { border-bottom: 0; }
+    .item__name { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .field { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+    .field__label { flex: 0 0 92px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #64748b; }
+    .field__value { flex: 1 1 auto; font-size: 16px; color: #0f172a; word-break: break-word; cursor: grab; border-radius: 5px; padding: 1px 4px; }
+    .field__value:hover { background: #eff6ff; }
+    .copy { flex: 0 0 auto; cursor: pointer; border: 1px solid #cbd5e1; background: #fff; color: #2563eb; border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 600; }
+    .copy:hover { background: #eff6ff; }
+    .copy.copied { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <span class="head__dot"></span>
+    <span class="head__title">ProcEasy · Invoice Capture</span>
+    <span id="spin" class="head__spin"></span>
+  </div>
+  <div id="view"></div>
+  <input id="picker" type="file" accept="application/pdf,.pdf" hidden>
+  <script src="popup.js"></script>
+</body>
+</html>

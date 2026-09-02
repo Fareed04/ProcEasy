@@ -5,7 +5,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.files import File
 from django.core.files.storage import default_storage
+from django.http import JsonResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import InvoiceRecord
 from .extraction.utils import extract_text_from_pdf
@@ -97,6 +99,21 @@ def _collect_invoice_data(request):
     }
 
 
+def _wants_json(request):
+    """True when the caller wants a JSON payload over the HTML verify redirect.
+
+    Signalled by any of: an ``application/json`` Accept header, a
+    ``?format=json`` query param, or our Chrome extension's own
+    ``X-ProcEasy-Client`` request header.
+    """
+    if request.GET.get("format") == "json":
+        return True
+    if request.headers.get("X-ProcEasy-Client"):
+        return True
+    return "application/json" in request.headers.get("Accept", "")
+
+
+@csrf_exempt  # let the Chrome extension POST pdf_file without a CSRF token
 def pdf_upload(request):
 
     if request.method == "POST" and request.FILES.get("pdf_file"):
@@ -126,6 +143,17 @@ def pdf_upload(request):
             "extracted_text": extracted_text,
             "parsed_data": parsed_data,
         }
+
+        # Extension / API callers get the structured payload directly; the
+        # browser form flow still redirects to the HTML verify page.
+        if _wants_json(request):
+            return JsonResponse({
+                "ok": True,
+                "original_name": uploaded_file.name,
+                "invoice": parsed_data.get("invoice", {}),
+                "items": parsed_data.get("items", []),
+                "payment_terms": parsed_data.get("payment_terms", []),
+            })
 
         return redirect("verify_draft")
 
