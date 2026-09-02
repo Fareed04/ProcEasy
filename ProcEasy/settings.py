@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'core',
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -145,3 +147,10 @@ OCR_DPI = 300
 # characters is treated as scanned and sent to OCR. This is what stops a tiny
 # annotation stamp ("OK to proceed" + date) from masking a scanned invoice.
 OCR_MIN_TEXT_CHARS = 40
+
+
+# ---- CORS ----
+# Allows the Chrome extension to reach this local dev server from a different
+# origin. This is a wide-open, DEBUG-only convenience: do NOT ship it to
+# production -- there, replace it with an explicit CORS_ALLOWED_ORIGINS list.
+CORS_ALLOW_ALL_ORIGINS = True
