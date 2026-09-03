@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -154,3 +155,13 @@ OCR_MIN_TEXT_CHARS = 40
 # origin. This is a wide-open, DEBUG-only convenience: do NOT ship it to
 # production -- there, replace it with an explicit CORS_ALLOWED_ORIGINS list.
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+# ---- Agent Router (LLM gateway) ----
+# Extension uploads are extracted by an OpenAI-compatible gateway instead of the
+# local OCR + parser. Credentials come from the environment -- never commit
+# them. AGENT_ROUTER_MODEL defaults to the Opus model slug exposed by the
+# gateway (maps to Anthropic's claude-opus-4-8).
+AGENT_ROUTER_BASE_URL = os.environ.get("AGENT_ROUTER_BASE_URL", "")
+AGENT_ROUTER_API_KEY = os.environ.get("AGENT_ROUTER_API_KEY", "")
+AGENT_ROUTER_MODEL = os.environ.get("AGENT_ROUTER_MODEL", "anthropic/claude-opus-4.8")
