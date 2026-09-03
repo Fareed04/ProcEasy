@@ -1,6 +1,11 @@
+import base64
+import json
+import mimetypes
 import os
+import re
 import tempfile
 
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.core.files import File
@@ -12,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import InvoiceRecord
 from .extraction.utils import extract_text_from_pdf
 from .parsing.parser import parse_invoice_text
+from .schema import empty_invoice, empty_item
 
 
 # Session key under which an unsaved upload is staged until verification.
@@ -113,12 +119,156 @@ def _wants_json(request):
     return "application/json" in request.headers.get("Accept", "")
 
 
+# ---------------------------------------------------------------------------
+# Agent Router (LLM gateway) extraction
+#
+# Extension / API callers have their documents extracted by an OpenAI-compatible
+# gateway (settings.AGENT_ROUTER_*) instead of the local OCR + regex parser. The
+# model is asked for bare JSON in exactly the shape core/schema.py defines, and
+# that JSON is handed straight back to the caller.
+# ---------------------------------------------------------------------------
+
+def _build_extraction_prompt():
+    """Minified system prompt pinned to the core/schema.py structure."""
+    template = empty_invoice()
+    template["items"] = [empty_item()]
+    template["payment_terms"] = [{"type": "", "percentage": ""}]
+    schema = json.dumps(template, separators=(",", ":"))
+    return (
+        "You extract data from an invoice document. "
+        "Respond with ONE minified JSON object and nothing else: "
+        "no prose, no markdown, no code fences. "
+        "Use exactly these keys and nesting, one object per line item and per "
+        "payment term, and empty strings where a value is missing: " + schema
+    )
+
+
+_EXTRACTION_SYSTEM_PROMPT = _build_extraction_prompt()
+
+
+def _model_media_type(uploaded_file):
+    """Best-effort MIME type for the upload (falls back to the file name)."""
+    media_type = (uploaded_file.content_type or "").lower()
+    if not media_type or media_type == "application/octet-stream":
+        guessed, _ = mimetypes.guess_type(uploaded_file.name or "")
+        media_type = (guessed or "application/pdf").lower()
+    return media_type
+
+
+def _document_content_part(uploaded_file):
+    """Encode the upload as an OpenAI-compatible file / vision content part."""
+    b64 = base64.standard_b64encode(uploaded_file.read()).decode("ascii")
+    media_type = _model_media_type(uploaded_file)
+    name = uploaded_file.name or "document"
+
+    if media_type == "application/pdf" or name.lower().endswith(".pdf"):
+        return {
+            "type": "file",
+            "file": {
+                "filename": name,
+                "file_data": f"data:application/pdf;base64,{b64}",
+            },
+        }
+    return {
+        "type": "image_url",
+        "image_url": {"url": f"data:{media_type};base64,{b64}"},
+    }
+
+
+def _parse_model_json(text):
+    """Load the model reply as JSON, tolerating stray fences or prose."""
+    text = (text or "").strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    fenced = re.sub(r"^```[a-zA-Z]*\n?", "", text)
+    fenced = re.sub(r"\n?```$", "", fenced).strip()
+    try:
+        return json.loads(fenced)
+    except json.JSONDecodeError:
+        pass
+
+    start, end = fenced.find("{"), fenced.rfind("}")
+    if 0 <= start < end:
+        return json.loads(fenced[start:end + 1])
+    raise ValueError("model response contained no JSON object")
+
+
+def _extract_via_gateway(uploaded_file):
+    """Send the document to the Agent Router gateway; return its JSON reply."""
+    base_url = settings.AGENT_ROUTER_BASE_URL
+    api_key = settings.AGENT_ROUTER_API_KEY
+    if not base_url or not api_key:
+        return JsonResponse(
+            {"ok": False, "error": "Agent Router is not configured (set "
+             "AGENT_ROUTER_BASE_URL and AGENT_ROUTER_API_KEY)."},
+            status=503,
+        )
+
+    try:
+        from openai import OpenAI
+    except ImportError:
+        return JsonResponse(
+            {"ok": False, "error": "The 'openai' package is not installed."},
+            status=500,
+        )
+
+    content_part = _document_content_part(uploaded_file)
+    client = OpenAI(base_url=base_url, api_key=api_key)
+
+    try:
+        completion = client.chat.completions.create(
+            model=settings.AGENT_ROUTER_MODEL,
+            temperature=0,
+            max_tokens=8192,
+            messages=[
+                {"role": "system", "content": _EXTRACTION_SYSTEM_PROMPT},
+                {"role": "user", "content": [
+                    content_part,
+                    {"type": "text", "text": "Extract this invoice."},
+                ]},
+            ],
+        )
+    except Exception as exc:  # gateway / network / auth failure
+        return JsonResponse(
+            {"ok": False, "error": f"Agent Router request failed: {exc}"},
+            status=502,
+        )
+
+    raw = completion.choices[0].message.content if completion.choices else ""
+    try:
+        data = _parse_model_json(raw)
+    except (ValueError, json.JSONDecodeError):
+        return JsonResponse(
+            {"ok": False, "error": "Model did not return valid JSON.",
+             "raw": raw},
+            status=502,
+        )
+
+    if not isinstance(data, dict):
+        return JsonResponse(
+            {"ok": False, "error": "Model JSON was not an object.", "raw": raw},
+            status=502,
+        )
+
+    # Hand the model's JSON straight back to the extension caller.
+    return JsonResponse(data)
+
+
 @csrf_exempt  # let the Chrome extension POST pdf_file without a CSRF token
 def pdf_upload(request):
 
     if request.method == "POST" and request.FILES.get("pdf_file"):
 
         uploaded_file = request.FILES["pdf_file"]
+
+        # Extension / API callers: extract via the Agent Router gateway and
+        # return the model's JSON verbatim. The browser form flow below keeps
+        # using the local OCR + parser and the staged-draft verify page.
+        if _wants_json(request):
+            return _extract_via_gateway(uploaded_file)
 
         # Clean up any previously staged draft that was never verified.
         old_draft = request.session.get(DRAFT_SESSION_KEY)
@@ -143,17 +293,6 @@ def pdf_upload(request):
             "extracted_text": extracted_text,
             "parsed_data": parsed_data,
         }
-
-        # Extension / API callers get the structured payload directly; the
-        # browser form flow still redirects to the HTML verify page.
-        if _wants_json(request):
-            return JsonResponse({
-                "ok": True,
-                "original_name": uploaded_file.name,
-                "invoice": parsed_data.get("invoice", {}),
-                "items": parsed_data.get("items", []),
-                "payment_terms": parsed_data.get("payment_terms", []),
-            })
 
         return redirect("verify_draft")
 
