@@ -165,3 +165,13 @@ CORS_ALLOW_ALL_ORIGINS = True
 AGENT_ROUTER_BASE_URL = os.environ.get("AGENT_ROUTER_BASE_URL", "")
 AGENT_ROUTER_API_KEY = os.environ.get("AGENT_ROUTER_API_KEY", "")
 AGENT_ROUTER_MODEL = os.environ.get("AGENT_ROUTER_MODEL", "anthropic/claude-opus-4.8")
+
+# ---- Gemini (LLM gateway) ----
+# Extension uploads are extracted by Google's Gemini API instead of the local
+# OCR + parser. The key comes from the environment -- never commit it. Set it in
+# the shell that launches the server, e.g. (PowerShell):
+#   $env:GEMINI_API_KEY = "your-AI-Studio-key"
+# GEMINI_MODEL defaults to a current, free-tier-friendly multimodal model;
+# override to e.g. "gemini-2.5-pro" for higher extraction quality.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
