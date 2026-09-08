@@ -1,4 +1,3 @@
-import base64
 import json
 import mimetypes
 import os
@@ -120,12 +119,13 @@ def _wants_json(request):
 
 
 # ---------------------------------------------------------------------------
-# Agent Router (LLM gateway) extraction
+# Gemini (LLM gateway) extraction
 #
-# Extension / API callers have their documents extracted by an OpenAI-compatible
-# gateway (settings.AGENT_ROUTER_*) instead of the local OCR + regex parser. The
-# model is asked for bare JSON in exactly the shape core/schema.py defines, and
-# that JSON is handed straight back to the caller.
+# Extension / API callers have their documents extracted by Google's Gemini API
+# (settings.GEMINI_*) instead of the local OCR + regex parser. The document is
+# sent as a native inline part, the model is asked for bare JSON in exactly the
+# shape core/schema.py defines (enforced with response_mime_type), and that JSON
+# is handed straight back to the caller.
 # ---------------------------------------------------------------------------
 
 def _build_extraction_prompt():
@@ -155,24 +155,18 @@ def _model_media_type(uploaded_file):
     return media_type
 
 
-def _document_content_part(uploaded_file):
-    """Encode the upload as an OpenAI-compatible file / vision content part."""
-    b64 = base64.standard_b64encode(uploaded_file.read()).decode("ascii")
-    media_type = _model_media_type(uploaded_file)
-    name = uploaded_file.name or "document"
+def _document_content_part(uploaded_file, types):
+    """Wrap the upload as a native Gemini inline-data Part.
 
-    if media_type == "application/pdf" or name.lower().endswith(".pdf"):
-        return {
-            "type": "file",
-            "file": {
-                "filename": name,
-                "file_data": f"data:application/pdf;base64,{b64}",
-            },
-        }
-    return {
-        "type": "image_url",
-        "image_url": {"url": f"data:{media_type};base64,{b64}"},
-    }
+    Gemini accepts PDFs and images inline as raw bytes plus a MIME type and
+    base64-encodes them for transport itself, so we hand the bytes over
+    directly instead of building the ``data:`` URI the old OpenAI gateway
+    needed. ``types`` is the ``google.genai.types`` module, imported lazily by
+    the caller so a missing package degrades gracefully.
+    """
+    data = uploaded_file.read()
+    media_type = _model_media_type(uploaded_file)
+    return types.Part.from_bytes(data=data, mime_type=media_type)
 
 
 def _parse_model_json(text):
@@ -197,47 +191,56 @@ def _parse_model_json(text):
 
 
 def _extract_via_gateway(uploaded_file):
-    """Send the document to the Agent Router gateway; return its JSON reply."""
-    base_url = settings.AGENT_ROUTER_BASE_URL
-    api_key = settings.AGENT_ROUTER_API_KEY
-    if not base_url or not api_key:
+    """Send the document to the Google Gemini API; return its JSON reply."""
+    api_key = settings.GEMINI_API_KEY
+    if not api_key:
         return JsonResponse(
-            {"ok": False, "error": "Agent Router is not configured (set "
-             "AGENT_ROUTER_BASE_URL and AGENT_ROUTER_API_KEY)."},
+            {"ok": False, "error": "Gemini is not configured (set GEMINI_API_KEY)."},
             status=503,
         )
 
     try:
-        from openai import OpenAI
+        from google import genai
+        from google.genai import types
     except ImportError:
         return JsonResponse(
-            {"ok": False, "error": "The 'openai' package is not installed."},
+            {"ok": False, "error": "The 'google-genai' package is not installed."},
             status=500,
         )
 
-    content_part = _document_content_part(uploaded_file)
-    client = OpenAI(base_url=base_url, api_key=api_key)
+    client = genai.Client(api_key=api_key)
+    document_part = _document_content_part(uploaded_file, types)
 
     try:
-        completion = client.chat.completions.create(
-            model=settings.AGENT_ROUTER_MODEL,
-            temperature=0,
-            max_tokens=8192,
-            messages=[
-                {"role": "system", "content": _EXTRACTION_SYSTEM_PROMPT},
-                {"role": "user", "content": [
-                    content_part,
-                    {"type": "text", "text": "Extract this invoice."},
-                ]},
-            ],
+        response = client.models.generate_content(
+            model=settings.GEMINI_MODEL,
+            contents=[document_part, "Extract this invoice."],
+            config=types.GenerateContentConfig(
+                # The schema rules ride in as the system instruction, and
+                # response_mime_type makes Gemini emit bare JSON natively --
+                # no markdown fences to strip afterwards.
+                system_instruction=_EXTRACTION_SYSTEM_PROMPT,
+                temperature=0,
+                max_output_tokens=8192,
+                response_mime_type="application/json",
+            ),
         )
     except Exception as exc:  # gateway / network / auth failure
         return JsonResponse(
-            {"ok": False, "error": f"Agent Router request failed: {exc}"},
+            {"ok": False, "error": f"Gemini request failed: {exc}"},
             status=502,
         )
 
-    raw = completion.choices[0].message.content if completion.choices else ""
+    # .text raises if the model returned no usable candidate (e.g. a safety
+    # block or an empty response), so guard it rather than let it 500.
+    try:
+        raw = response.text or ""
+    except Exception as exc:
+        return JsonResponse(
+            {"ok": False, "error": f"Gemini returned no usable text: {exc}"},
+            status=502,
+        )
+
     try:
         data = _parse_model_json(raw)
     except (ValueError, json.JSONDecodeError):
@@ -264,9 +267,9 @@ def pdf_upload(request):
 
         uploaded_file = request.FILES["pdf_file"]
 
-        # Extension / API callers: extract via the Agent Router gateway and
-        # return the model's JSON verbatim. The browser form flow below keeps
-        # using the local OCR + parser and the staged-draft verify page.
+        # Extension / API callers: extract via the Gemini API and return the
+        # model's JSON verbatim. The browser form flow below keeps using the
+        # local OCR + parser and the staged-draft verify page.
         if _wants_json(request):
             return _extract_via_gateway(uploaded_file)
 
