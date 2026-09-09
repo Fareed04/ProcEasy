@@ -438,7 +438,9 @@
     val.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("text/plain", value);
       e.dataTransfer.effectAllowed = "copy";
+      chipDragging = true; lastActivated = null;  // arm the grid-cell wake-up below
     });
+    val.addEventListener("dragend", endChipDrag);
     const btn = document.createElement("button");
     btn.className = "copy";
     btn.type = "button";
@@ -500,6 +502,63 @@
       body.appendChild(wrap);
     });
   }
+
+  // --- Grid-cell wake-up during chip drag --------------------------------- //
+  // Some ERP grids (AG-Grid / Handsontable-style) render a cell as static text
+  // and only swap in the real <input>/<textarea> editor once the cell is
+  // clicked. A plain HTML5 text drop lands on that dead cell and is ignored.
+  // So while one of OUR chips is airborne, we focus()+click() the editable
+  // target the cursor is over to spin up the row's editor before the drop lands.
+  //
+  // Three guards keep this from misfiring on the host page:
+  //   1. armed ONLY while a ProcEasy chip is mid-drag (chipDragging),
+  //   2. fires ONCE per target on entry, not on every dragover tick, and
+  //   3. wakes ONLY editable targets -- never buttons, links, or input types
+  //      (submit/checkbox/file/...) where a synthetic click has a side effect.
+  const dragActivationListeners = [];  // [target, type, handler] registry
+  let chipDragging = false;            // true only while a ProcEasy chip is airborne
+  let lastActivated = null;            // last woken element, so we fire once per cell
+
+  // Input types where a click does something other than place a caret -- left alone.
+  const UNSAFE_INPUT_TYPES = new Set(
+    ["button", "submit", "reset", "checkbox", "radio", "file", "image", "color", "range"]);
+
+  // Walk up from the hovered node to the nearest editable cell we're willing to
+  // wake; returns null (leave it be) for anything non-editable or side-effecting.
+  function activatableTarget(node) {
+    for (let el = node; el && el.nodeType === 1; el = el.parentElement) {
+      const tag = el.tagName;
+      if (tag === "TEXTAREA") return el;
+      if (tag === "INPUT" && !UNSAFE_INPUT_TYPES.has((el.type || "text").toLowerCase())) return el;
+      if (el.isContentEditable) return el;
+      if (el.getAttribute && el.getAttribute("role") === "gridcell") return el;
+    }
+    return null;
+  }
+
+  function wakeDropTarget(e) {
+    if (!chipDragging) return;
+    const node = (e.target && e.target.nodeType === 1)
+      ? e.target
+      : document.elementFromPoint(e.clientX, e.clientY);
+    const target = activatableTarget(node);
+    if (!target || target === lastActivated) return;  // once per cell entry
+    lastActivated = target;
+    try { target.focus({ preventScroll: true }); } catch (_) { try { target.focus(); } catch (__) {} }
+    try { target.click(); } catch (_) {}
+    // No preventDefault: native inputs keep their built-in text-drop behaviour.
+  }
+
+  function endChipDrag() { chipDragging = false; lastActivated = null; }
+
+  function addDragActivation(target, type, handler) {
+    target.addEventListener(type, handler, true);  // capture: run ahead of page handlers
+    dragActivationListeners.push([target, type, handler]);
+  }
+  addDragActivation(document, "dragenter", wakeDropTarget);
+  addDragActivation(document, "dragover", wakeDropTarget);
+  addDragActivation(document, "drop", endChipDrag);
+  addDragActivation(document, "dragend", endChipDrag);
 
   // Rehydrate any invoice a prior tab/session parsed, once everything is wired up.
   restoreData();
