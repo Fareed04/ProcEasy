@@ -3,7 +3,7 @@
   "name": "ProcEasy Clipboard Assistant",
   "version": "0.2.0",
   "description": "Premium assistive ProcEasy widget: AssistiveTouch dot, clipboard/drag-drop invoice capture, and draggable extracted fields.",
-  "permissions": ["activeTab", "clipboardRead"],
+  "permissions": ["activeTab", "clipboardRead", "storage"],
   "host_permissions": [
     "http://127.0.0.1:8000/*",
     "http://localhost:8000/*"
