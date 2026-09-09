@@ -4,7 +4,7 @@
 (() => {
   "use strict";
 
-  const DJANGO_UPLOAD_URL = "http://127.0.0.1:8000/";
+  const DJANGO_UPLOAD_URL = "http://127.0.0.1:8000/?format=json";
   const ITEM_FIELDS = [
     ["Name", "item_name"],
     ["Qty", "quantity"],
@@ -30,7 +30,7 @@
     try {
       const fd = new FormData();
       fd.append("pdf_file", file, file.name || "invoice.pdf");
-      const res = await fetch(DJANGO_UPLOAD_URL, { method: "POST", body: fd, credentials: "include" });
+      const res = await fetch(DJANGO_UPLOAD_URL, { method: "POST", body: fd });
       let data = null;
       try { data = await res.clone().json(); } catch (_) { data = null; }
       if (data && (data.items || data.invoice)) {

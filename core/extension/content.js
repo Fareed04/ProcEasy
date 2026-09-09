@@ -13,7 +13,8 @@
   const DOT_SIZE = 44;                 // shrunken AssistiveTouch puck
   const MARGIN = 20;
   const IDLE_MS = 5000;                // fade after 5s untouched
-  const DJANGO_UPLOAD_URL = "http://127.0.0.1:8000/";  // pdf_upload view
+  const DJANGO_UPLOAD_URL = "http://127.0.0.1:8000/?format=json";  // pdf_upload view
+  const STORAGE_KEY = "proceasy_invoice";  // chrome.storage.local key for cross-tab data
 
   // Field label -> dedup-layout key, in display order.
   const ITEM_FIELDS = [
@@ -52,6 +53,13 @@
     }
     .at-dot.loading::before { opacity: 1; animation: at-spin .9s linear infinite; }
     @keyframes at-spin { to { transform: rotate(360deg); } }
+
+    /* Snap-to-edge easing -- present only while settling so live dragging stays instant */
+    .at-dot.snapping { transition: opacity .55s ease, transform .12s ease,
+      left .28s cubic-bezier(.22,1,.36,1), top .28s cubic-bezier(.22,1,.36,1); }
+    /* File dragged directly over the resting puck */
+    .at-dot.dropping { transform: scale(1.15);
+      box-shadow: 0 0 0 3px rgba(10,132,255,.6), 0 2px 12px rgba(0,0,0,.38); }
 
     /* --- Card --- */
     .card {
@@ -174,6 +182,7 @@
 
   dot.addEventListener("pointerdown", (e) => {
     dragging = true; moved = false; sx = e.clientX; sy = e.clientY;
+    dot.classList.remove("snapping");
     const r = dot.getBoundingClientRect();
     ox = e.clientX - r.left; oy = e.clientY - r.top;
     dot.setPointerCapture(e.pointerId);
@@ -192,7 +201,22 @@
   dot.addEventListener("pointerup", (e) => {
     dragging = false;
     try { dot.releasePointerCapture(e.pointerId); } catch (_) {}
-    if (!moved) toggleCard();
+    if (!moved) toggleCard(); else snapDotToEdge();
+  });
+
+  // Direct puck dropping: dropping a file straight onto the resting dot fires
+  // the spinner + upload without opening the card first.
+  dot.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    dot.classList.add("dropping");
+  });
+  dot.addEventListener("dragleave", () => dot.classList.remove("dropping"));
+  dot.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dot.classList.remove("dropping");
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) { setLoading(true); uploadFile(f); }
   });
 
   function toggleCard() {
@@ -212,6 +236,34 @@
     const top = Math.max(MARGIN, Math.min(r.top, window.innerHeight - ch - MARGIN));
     card.style.left = `${left}px`;
     card.style.top = `${top}px`;
+  }
+
+  // Settle the puck against whichever vertical edge is nearer, animating with the
+  // temporary `.snapping` transition; the card (if open) is glued along the way.
+  function snapDotToEdge() {
+    const r = dot.getBoundingClientRect();
+    const toRight = (r.left + DOT_SIZE / 2) >= window.innerWidth / 2;
+    const targetLeft = toRight ? window.innerWidth - DOT_SIZE - MARGIN : MARGIN;
+    dot.classList.add("snapping");
+    dot.style.left = `${targetLeft}px`;
+
+    let settling = true;
+    const follow = () => {
+      if (!settling) return;
+      if (card.classList.contains("open")) positionCard();
+      requestAnimationFrame(follow);
+    };
+    requestAnimationFrame(follow);
+
+    const done = (ev) => {
+      if (ev && ev.propertyName && ev.propertyName !== "left") return;  // ignore opacity/transform ticks
+      settling = false;
+      dot.classList.remove("snapping");
+      if (card.classList.contains("open")) positionCard();
+      dot.removeEventListener("transitionend", done);
+    };
+    dot.addEventListener("transitionend", done);
+    setTimeout(done, 360);  // fallback if transitionend never lands
   }
 
   window.addEventListener("resize", () => {
@@ -274,11 +326,12 @@
       fd.append("pdf_file", file, file.name || "invoice.pdf");
       // localhost is treated as a secure context, so this is allowed from https
       // pages too. The dev view may need CSRF exemption for the extension origin.
-      const res = await fetch(DJANGO_UPLOAD_URL, { method: "POST", body: fd, credentials: "include" });
+      const res = await fetch(DJANGO_UPLOAD_URL, { method: "POST", body: fd });
       let data = null;
       try { data = await res.clone().json(); } catch (_) { data = null; }
       if (data && (data.items || data.invoice)) {
         renderData(data);
+        persistData(data);
       } else {
         // Current pdf_upload view answers with an HTML redirect, not JSON; fall
         // back to the bundled dedup layout so the draggable grid still renders.
@@ -294,6 +347,39 @@
   function loadBundled() {
     return fetch(chrome.runtime.getURL("data.json")).then((r) => r.json());
   }
+
+  // --- Cross-tab persistence (chrome.storage.local) --- //
+  // Extracted data is stashed on success and rehydrated on load, so a parse in
+  // one tab shows up in every other tab's sidebar grid.
+  let lastStored = null;  // JSON of our own last write, to ignore the echo below
+
+  function persistData(data) {
+    try {
+      lastStored = JSON.stringify(data);
+      chrome.storage.local.set({ [STORAGE_KEY]: data });
+    } catch (_) {}
+  }
+  function clearPersisted() {
+    lastStored = null;
+    try { chrome.storage.local.remove(STORAGE_KEY); } catch (_) {}
+  }
+  function restoreData() {
+    try {
+      chrome.storage.local.get(STORAGE_KEY, (res) => {
+        const data = res && res[STORAGE_KEY];
+        if (data && (data.items || data.invoice)) renderData(data);
+      });
+    } catch (_) {}
+  }
+  // Live-sync tabs already open when another tab stores a fresh extraction.
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== "local" || !changes[STORAGE_KEY]) return;
+      const nv = changes[STORAGE_KEY].newValue;
+      if (!nv || JSON.stringify(nv) === lastStored) return;  // gone, or our own echo
+      if (nv.items || nv.invoice) renderData(nv);
+    });
+  } catch (_) {}
 
   // --- Clipboard copy --- //
   async function copyText(value, btn) {
@@ -365,6 +451,7 @@
   function renderEmpty() {
     body.textContent = "";
     body.appendChild(buildDropzone());
+    clearPersisted();  // starting fresh -> drop the stored invoice for all tabs
   }
 
   function renderData(data, note) {
@@ -413,4 +500,7 @@
       body.appendChild(wrap);
     });
   }
+
+  // Rehydrate any invoice a prior tab/session parsed, once everything is wired up.
+  restoreData();
 })();
