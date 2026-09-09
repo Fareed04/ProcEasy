@@ -1,4 +1,5 @@
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -17,6 +18,9 @@ from .models import InvoiceRecord
 from .extraction.utils import extract_text_from_pdf
 from .parsing.parser import parse_invoice_text
 from .schema import empty_invoice, empty_item
+
+
+logger = logging.getLogger(__name__)
 
 
 # Session key under which an unsaved upload is staged until verification.
@@ -255,6 +259,29 @@ def _extract_via_gateway(uploaded_file):
             {"ok": False, "error": "Model JSON was not an object.", "raw": raw},
             status=502,
         )
+
+    # Persist the extraction for permanent tracking. Gemini already returns the
+    # exact core/schema.py shape, so `data` goes straight into parsed_data.
+    # (NB: _collect_invoice_data() can't be reused here -- it reads a request's
+    # POST fields, not a ready-made dict.) These rows are unverified: the browser
+    # verify flow still owns verified=True + verified_at. Best-effort and logged
+    # so a storage/DB failure never turns a good extraction into a 500.
+    try:
+        try:
+            uploaded_file.seek(0)  # rewind past the read in _document_content_part
+            saved_path = default_storage.save(
+                f"dataset/pdfs/{uploaded_file.name}", uploaded_file
+            )
+        except Exception:
+            saved_path = ""  # source file is optional; the parsed data is the point
+        InvoiceRecord.objects.create(
+            pdf_file=saved_path,
+            extracted_text=raw,
+            parsed_data=data,
+            verified=False,
+        )
+    except Exception:
+        logger.exception("Gemini extraction succeeded but persistence failed")
 
     # Hand the model's JSON straight back to the extension caller.
     return JsonResponse(data)
