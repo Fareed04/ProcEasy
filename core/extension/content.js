@@ -445,7 +445,11 @@
     btn.className = "copy";
     btn.type = "button";
     btn.textContent = "Copy";
-    btn.addEventListener("click", (e) => { e.stopPropagation(); copyText(value, btn); });
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      activeClipboardBuffer = value;  // stage this chip for click-to-inject into the next field
+      copyText(value, btn);
+    });
     row.append(lab, val, btn);
     return row;
   }
@@ -559,6 +563,73 @@
   addDragActivation(document, "dragover", wakeDropTarget);
   addDragActivation(document, "drop", endChipDrag);
   addDragActivation(document, "dragend", endChipDrag);
+
+  // --- Click-to-Inject ----------------------------------------------------- //
+  // Companion path for ERPs that reject native HTML text-drop payloads on their
+  // fields. Clicking a chip's "Copy" stages its value in activeClipboardBuffer;
+  // the next click into an editable ERP field writes that value in and fires
+  // input/change so controlled components (and dependent totals) recompute.
+  // One-shot: the buffer clears itself after a single injection.
+  const clickInjectionListeners = [];  // registry, parallels dragActivationListeners
+  let activeClipboardBuffer = null;    // value staged by a "Copy" click, or null
+
+  // Set a value the way a framework-controlled input expects: through the
+  // prototype's native setter, so React/Vue value trackers actually see it.
+  function setNativeValue(el, value) {
+    const proto = el instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const desc = Object.getOwnPropertyDescriptor(proto, "value");
+    if (desc && desc.set) desc.set.call(el, value); else el.value = value;
+  }
+
+  function injectInto(el, value) {
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) setNativeValue(el, value);
+    else if (el.isContentEditable) el.textContent = value;
+    else return false;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  }
+
+  // Nearest editable target for the clicked node (same allow-list as the drag
+  // path -- no buttons/links/side-effecting input types).
+  function resolveInjectTarget(node) {
+    for (let el = node; el && el.nodeType === 1; el = el.parentElement) {
+      if (el instanceof HTMLTextAreaElement) return el;
+      if (el instanceof HTMLInputElement)
+        return UNSAFE_INPUT_TYPES.has((el.type || "text").toLowerCase()) ? null : el;
+      if (el.isContentEditable) return el;
+      if (el.getAttribute && el.getAttribute("role") === "gridcell") return el;
+    }
+    return null;
+  }
+
+  function onInjectClick(e) {
+    if (activeClipboardBuffer == null) return;
+    const hit = resolveInjectTarget(e.target);
+    if (!hit) return;
+    const value = activeClipboardBuffer;
+    activeClipboardBuffer = null;  // one-shot: consume the staged value
+    // NB: we do NOT stopPropagation/preventDefault -- the grid still needs its
+    // own click to spin up the cell editor. So defer the write one tick and
+    // re-resolve to the live editor (or the now-focused input) before injecting.
+    setTimeout(() => {
+      let target = hit;
+      const editable = hit instanceof HTMLInputElement
+        || hit instanceof HTMLTextAreaElement || hit.isContentEditable;
+      if (!editable) {
+        target = hit.querySelector("input, textarea, [contenteditable=''], [contenteditable=true]")
+          || (document.activeElement && document.activeElement !== document.body ? document.activeElement : null);
+      }
+      if (target) injectInto(target, value);
+    }, 0);
+  }
+
+  function addClickInjection(target, type, handler) {
+    target.addEventListener(type, handler, true);  // capture, per spec
+    clickInjectionListeners.push([target, type, handler]);
+  }
+  addClickInjection(document, "click", onInjectClick);
 
   // Rehydrate any invoice a prior tab/session parsed, once everything is wired up.
   restoreData();
