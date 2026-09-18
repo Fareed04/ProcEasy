@@ -1,401 +1,116 @@
 # ProcEasy
 
-**ProcEasy** is a Django-based procurement automation platform that turns messy purchase
-invoices — born-digital PDFs, scanned images, even scans hidden behind an approval stamp —
-into clean, structured, human-verified records.
+**Zero-typing procurement.** Drop an invoice PDF anywhere in the browser → a free Gemini 2.5 Flash vision pass returns structured JSON → drag or click the values straight into any ERP grid.
 
-Today it is a **human-in-the-loop invoice extraction and labelling tool**: upload a PDF, let
-the pipeline extract and pre-fill the fields, review and correct them on a purpose-built
-verification screen, and save a trustworthy record. Every verified invoice becomes a labelled
-example in a growing dataset — the foundation for the longer-term goal of an intelligent
-procurement assistant that reads documents automatically and populates ERP forms with no
-manual keying.
+`Django 5.2` · `Chrome MV3` · `Gemini 2.5 Flash` · `SQLite` · `Playwright`
 
 ---
 
-## Table of contents
-
-- [Why ProcEasy](#why-proceasy)
-- [Key capabilities](#key-capabilities)
-- [How it works](#how-it-works-the-pipeline)
-- [The verification interface](#the-verification-interface)
-- [Data model](#data-model)
-- [Domain notes](#domain-notes-nigerian-procurement)
-- [Project structure](#project-structure)
-- [Tech stack](#tech-stack)
-- [Getting started](#getting-started)
-- [Configuration](#configuration)
-- [Usage walkthrough](#usage-walkthrough)
-- [Admin](#admin)
-- [Roadmap](#roadmap)
-- [Limitations & notes](#limitations--notes)
-
----
-
-## Why ProcEasy
-
-Procurement teams spend hours retyping the same invoice fields — vendor, line items,
-quantities, prices, taxes, payment milestones — into ERP systems. The source documents are
-inconsistent: some are clean digital PDFs, many are scanned paper, and a frustrating number are
-scans that carry only a tiny digital annotation stamp (e.g. *"OK to proceed"* + a date) on top
-of an otherwise image-only page.
-
-ProcEasy attacks this in two stages:
-
-1. **Automate the reading.** A hybrid extraction pipeline pulls text from whichever kind of PDF
-   you throw at it, and a rule-based parser pre-fills the structured fields.
-2. **Keep a human in the loop.** A focused verification UI lets a person confirm and correct
-   every value quickly, guaranteeing the saved data is correct while quietly accumulating a
-   high-quality labelled dataset for future machine-learning models.
-
----
-
-## Key capabilities
-
-- **Universal PDF text extraction** — digital text layers *and* scanned images are handled by a
-  single entry point, with per-page decisions about which path to take.
-- **Stamp-aware OCR fallback** — pages whose only embedded text is a thin approval stamp are
-  correctly recognised as scanned and sent to OCR, instead of being skipped.
-- **Pluggable OCR backend** — local Tesseract by default, with a drop-in seam for cloud OCR
-  (Google Document AI) that can also read handwriting.
-- **Rule-based invoice parser** — best-effort pre-fill of vendor, currency, subtotal, grand
-  total and line items, with guards against misreading phone/contact lines as items.
-- **Structured verification form** — a two-pane screen showing raw extracted text beside an
-  editable, validated invoice form.
-- **Live client-side calculations** — line totals, subtotal and a tax-aware grand total are
-  computed as you type; discounts are applied per unit.
-- **Payment-terms validation** — milestone percentages must add up to exactly 100% before an
-  invoice can be saved.
-- **Draft staging** — nothing touches the database or the dataset folder until a human clicks
-  *Mark as Verified*, so failed or abandoned uploads leave no trace.
-- **Continuous labelling flow** — after saving, you land straight back on the upload screen with
-  a running *verified / total* progress counter.
-- **Handwritten flagging** — invoices can be tagged as handwritten for later model training.
-- **Admin dashboard** — browse, search and filter all records by vendor, cost center,
-  verification status and more.
-
----
-
-## How it works (the pipeline)
-
-A single upload flows through five stages. The first four are automatic; the fifth is the human
-gate.
+## Pipeline
 
 ```
-   Upload PDF                Extract                 Parse                Stage                 Verify & Save
- ┌────────────┐        ┌──────────────────┐    ┌──────────────┐    ┌──────────────┐      ┌────────────────────┐
- │ index page │  POST  │ per-page:        │    │ regex parser │    │ session +    │      │ human reviews,     │
- │ file input │ ─────▶ │  digital layer   │──▶ │ pre-fills    │──▶ │ OS temp file │ ───▶ │ corrects, submits  │
- │            │        │  or OCR fallback │    │ structured   │    │ (no DB yet)  │      │ → InvoiceRecord    │
- └────────────┘        └──────────────────┘    └──────────────┘    └──────────────┘      └────────────────────┘
-```
-
-### 1. Upload
-The home page (`/`) accepts a single PDF. On submit, the file is written to an OS temp file so
-the extractor — which needs a real filesystem path — can read it **without** yet touching the
-`dataset/pdfs/` folder or the database.
-
-### 2. Extract — [`core/extraction/utils.py`](core/extraction/utils.py)
-`extract_text_from_pdf()` walks the PDF page by page and decides, per page, how to read it:
-
-- **Digital fast path** — pages with a real embedded text layer are read directly via
-  **pdfplumber** (with layout preservation) or **PyPDF2**.
-- **OCR fallback** — a page is sent to OCR when its embedded text has fewer than
-  `OCR_MIN_TEXT_CHARS` (default **40**) non-space characters — *not* merely when it is empty.
-  This is the key insight: many invoices are scanned images carrying only a ~24-character
-  annotation stamp, which older extractors mistook for "this page already has text" and then
-  skipped OCR, reading nothing real. Pages needing OCR are rasterized once (lazily) with
-  **pdf2image / Poppler** at a configurable DPI (default 300), preprocessed (grayscale +
-  autocontrast), and run through the OCR backend.
-- **Stamp-noise stripping** — approval-stamp lines (`OK to proceed`, `Approved`, `Paid`, bare
-  dates, …) are removed from the output so they don't pollute the extracted text.
-
-The OCR engine sits behind a small **pluggable backend** interface:
-
-| Backend | Status | Notes |
-|---|---|---|
-| `tesseract` | ✅ Default, local | Uses `--psm 6` (uniform text block); good for printed invoices. |
-| `google_docai` | 🚧 Stub (planned) | Seam in place for cloud OCR; also reads handwriting. Wire the client and switch `OCR_BACKEND` to enable — no caller changes needed. |
-
-### 3. Parse — [`core/parsing/parser.py`](core/parsing/parser.py)
-`parse_invoice_text()` runs tolerant regex patterns (see
-[`patterns.py`](core/parsing/patterns.py)) to pre-fill:
-
-- **Vendor** (or the first non-empty line as a fallback letterhead guess)
-- **Currency** — by ISO code (`NGN`, `USD`, `GBP`, `EUR`) or symbol (`₦ $ £ €`)
-- **Subtotal** and **Grand Total** / **Amount Due**
-- **Line items** — description, quantity, unit price, optional line total
-
-The parser deliberately rejects lines that look like contact info (`tel`, `phone`, `fax`,
-`email`, `address`) and number runs of 7+ digits (phone numbers) so they aren't captured as line
-items. This is strictly **best-effort pre-fill** — every value is confirmed by a human next.
-
-### 4. Stage
-The extracted text, parsed data and temp-file path are stored in the **session** under a single
-draft key. Nothing is persisted yet, so a user who closes the tab or uploads a replacement
-leaves no orphan records or files.
-
-### 5. Verify & Save — [`core/views.py`](core/views.py)
-On the verify screen the user reviews everything and clicks **Mark as Verified**. Only then does
-ProcEasy move the staged PDF into `dataset/pdfs/`, create the `InvoiceRecord`
-(`verified=True`, `verified_at=now`), clear the draft from the session, and redirect back to the
-upload page for the next document.
-
----
-
-## The verification interface
-
-[`verify.html`](core/templates/core/verify.html) is a two-column workspace: the **raw extracted
-text** on the left (so you can cross-check against the source), and an **editable, structured
-form** on the right. It is tuned for high-repetition data entry — quiet surface, one accent
-colour, legible values.
-
-**Invoice header fields:** Vendor · Cost Center · Currency · Subtotal *(auto)* · Tax
-*(N/A · Inclusive · Exclusive)* · Tax Group · WHT · Grand Total *(auto)*.
-
-**Live calculations (client-side JS):**
-
-- **Line total** = `quantity × (unit price − discount)`, where discount is a fixed amount off
-  each unit's price and can never drive the price below zero.
-- **Subtotal** = sum of all line totals (read-only, auto-filled).
-- **Grand total** = subtotal, plus VAT on top when Tax is **Exclusive** (the VAT rate is parsed
-  from the selected Tax Group label, e.g. *"VAT 7.5% - FIRS"* → 7.5%). Inclusive / N/A leave the
-  subtotal unchanged.
-- **Description auto-fill** — a helpful default description is generated from the item name until
-  the user edits it manually.
-
-**Dynamic rows:** line items and payment terms can be added and removed on the fly. The item and
-payment-term rows are defined **once** as partials
-([`_invoice_item_row.html`](core/templates/core/_invoice_item_row.html),
-[`_payment_term_row.html`](core/templates/core/_payment_term_row.html)) and reused for
-server-rendered rows *and* the `<template>` the JavaScript clones for new rows — no duplicated
-markup.
-
-**Payment-terms validation:** each term has a type (*Advance payment · On GR/SC · On Invoice*)
-and a percentage; the percentage field unlocks only after a type is chosen. The form **blocks
-submission** unless the percentages sum to exactly **100%**, with a live running total badge.
-
-**Handwritten flag:** a checkbox marks the invoice as handwritten, recorded on the record for
-downstream model training.
-
-Saved records can be reopened and re-edited at `/verify/<id>/`.
-
----
-
-## Data model
-
-A single model, [`InvoiceRecord`](core/models.py), backs the whole app:
-
-| Field | Type | Purpose |
-|---|---|---|
-| `pdf_file` | `FileField` | The source PDF, stored under `dataset/pdfs/`. |
-| `extracted_text` | `TextField` | Raw text from the extraction pipeline. |
-| `parsed_data` | `JSONField` | The full structured invoice (header + items + payment terms). |
-| `verified` | `BooleanField` | Whether a human has confirmed the data. |
-| `is_handwritten` | `BooleanField` | Flags handwritten invoices for model training. |
-| `verified_at` | `DateTimeField` | When it was verified. |
-| `created_at` | `DateTimeField` | When the record was created. |
-
-The `parsed_data` JSON shape is defined in [`core/schema.py`](core/schema.py) and mirrors the
-form exactly:
-
-```jsonc
-{
-  "invoice": {
-    "vendor": "", "cost_center": "", "currency": "",
-    "subtotal": "", "tax": "", "tax_group": "", "wht": "", "grand_total": ""
-  },
-  "items": [
-    { "item_name": "", "description": "", "quantity": "",
-      "unit_price": "", "discount": "", "line_total": "" }
-  ],
-  "payment_terms": [
-    { "type": "", "percentage": "" }
-  ]
-}
+ PDF / image                Chrome Extension (MV3)              Django backend
+ ───────────       ┌──────────────────────────────┐      ┌──────────────────────┐
+  drop ──────────▶ │  AssistiveTouch dot → card   │─POST▶│  /?format=json       │
+  Ctrl+V ────────▶ │  Shadow DOM · edge-snap      │      │  Gemini 2.5 Flash    │
+  browse ────────▶ │  conic loading ring          │◀JSON─│  inline-bytes vision │
+                   └──────────────┬───────────────┘      └──────────┬───────────┘
+                                  │                                 │
+                   chrome.storage.local (all tabs)          InvoiceRecord (SQLite)
+                                  │
+                   draggable chips → click-to-inject → ERP cell
 ```
 
 ---
 
-## Domain notes (Nigerian procurement)
+## Core features
 
-The tax and payment options reflect a Nigerian procurement context:
+### 🧠 Free Gemini 2.5 Flash vision backend
+`core/views.py` → `_extract_via_gateway()`
 
-- **Tax Group** presets are FIRS VAT bands (Federal Inland Revenue Service): 0%, 5%, 7.5%.
-- **WHT** presets are FIRS withholding-tax bands: 2%, 5%, 10%, 15%.
-- **Payment-term types** map to common procurement milestones — *Advance payment*,
-  *On GR/SC* (goods receipt / service confirmation) and *On Invoice*.
-- **NGN** is a first-class currency alongside USD, GBP and EUR.
+| | |
+|---|---|
+| **Transport** | Raw bytes as a native `types.Part.from_bytes()` inline part — no base64 URI, no OCR pre-pass |
+| **Schema lock** | System prompt is generated from `core/schema.py` at import time; `response_mime_type="application/json"` forces bare JSON |
+| **Determinism** | `temperature=0`, `max_output_tokens=8192` |
+| **Resilience** | Three-tier JSON salvage (raw → de-fenced → brace-slice); graceful `502`/`503` on auth, network, or safety-block failure |
+| **Cost** | AI Studio free tier — handles scans, photos, and handwriting that local Tesseract cannot |
 
-These are presets in the templates and can be extended for other jurisdictions.
+### 🗄️ Django database logging
+Every gateway extraction is persisted **best-effort** as an `InvoiceRecord` — source PDF to `dataset/pdfs/`, raw model reply to `extracted_text`, structured payload to `parsed_data` (JSONField). Failures are logged, never raised: a storage/DB error can't turn a good extraction into a 500. Extension rows land `verified=False`; only the human verify flow sets `verified=True` + `verified_at`, so every row accrues to a labelled training dataset.
 
----
+### 🔵 AssistiveTouch floating dot
+`core/extension/content.js` — iOS-style 44px puck, Shadow-DOM isolated so host CSS never bleeds in.
 
-## Project structure
+- **Idle fade** to 40% after 5s, wakes on hover
+- **Edge-snap physics** — `cubic-bezier(.22,1,.36,1)` settle to the nearer vertical edge, with an rAF follow loop gluing the card during flight
+- **Conic-gradient loading ring** masked to a 3px annulus while the upload is in flight
+- **Three capture paths** — drop directly on the puck, drop in the card, or hover + `Ctrl+V` (native `paste` event *and* async Clipboard API)
 
-```
-ProcEasy/
-├── manage.py
-├── requirements.txt
-├── db.sqlite3
-├── ProcEasy/                     # Django project config
-│   ├── settings.py               # incl. OCR / extraction settings
-│   ├── urls.py                   # /admin + core routes
-│   ├── wsgi.py / asgi.py
-├── core/                         # the single app
-│   ├── models.py                 # InvoiceRecord
-│   ├── views.py                  # upload → verify_draft → verify_invoice
-│   ├── urls.py
-│   ├── admin.py                  # InvoiceRecord admin
-│   ├── schema.py                 # empty_invoice() / empty_item()
-│   ├── extraction/
-│   │   └── utils.py              # extract_text_from_pdf + OCR backends
-│   ├── parsing/
-│   │   ├── parser.py             # parse_invoice_text
-│   │   └── patterns.py           # regex patterns
-│   ├── templates/core/
-│   │   ├── index.html            # upload page
-│   │   ├── verify.html           # verification workspace
-│   │   ├── _invoice_item_row.html
-│   │   └── _payment_term_row.html
-│   └── static/core/styles.css
-└── dataset/pdfs/                 # verified source PDFs (the dataset)
-```
+### 🔗 Cross-tab persistence
+Successful extractions are written to `chrome.storage.local` and rehydrated on every content-script load. A `storage.onChanged` listener live-syncs already-open tabs, with an echo guard (`lastStored`) so the writing tab doesn't re-render its own payload. Parse once — every tab has the data.
 
-### Routes
+### ⚡ Framework-level click-to-inject & cell bypassing
+The hard problem: AG-Grid / Handsontable-style ERPs render cells as **static text** and only swap in a real `<input>` on click, so a native HTML5 drop lands on a dead node.
 
-| URL | View | Purpose |
-|---|---|---|
-| `/` | `pdf_upload` | Upload a PDF; on submit, extract + parse + stage, then redirect to verify. |
-| `/verify/` | `verify_draft` | Review a staged (unsaved) upload; persist on submit. |
-| `/verify/<id>/` | `verify_invoice` | View / re-edit an already-saved record. |
-| `/admin/` | Django admin | Browse, search and filter records. |
+**Drag path** — while a ProcEasy chip is airborne, a capture-phase `dragenter`/`dragover` interceptor `focus()`+`click()`s the hovered cell to spin up its editor *before* the drop lands. Three guards: armed only during a chip drag, fires once per cell entry, and only ever wakes editable targets (an `UNSAFE_INPUT_TYPES` deny-list keeps synthetic clicks off buttons, submits, checkboxes, and file inputs).
+
+**Click path** — for ERPs that reject native drop payloads. `Copy` stages a value; the next click into an editable field writes it via the **prototype's native `value` setter** (`Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set`), so React/Vue value trackers actually observe the change, then dispatches `input` + `change` so controlled components and dependent totals recompute. Deliberately non-blocking: the write defers one tick and re-resolves to the live editor, letting the grid's own click through. One-shot — the buffer clears after a single injection.
 
 ---
 
-## Tech stack
-
-- **Python · Django 5.2** — web framework, ORM, admin, sessions.
-- **SQLite** — default development database.
-- **pdfplumber · PyPDF2 · pdfminer.six** — digital PDF text extraction.
-- **Tesseract OCR (pytesseract)** — local OCR for scanned pages.
-- **pdf2image + Poppler** — rasterizing PDF pages for OCR.
-- **Pillow** — image preprocessing (grayscale, autocontrast).
-- Vanilla **HTML / CSS / JavaScript** — no frontend framework.
-
-See [`requirements.txt`](requirements.txt) for pinned versions.
-
----
-
-## Getting started
-
-### Prerequisites
-
-- **Python 3.11+**
-- **Tesseract OCR** — required for the local OCR backend.
-  - Windows default expected at `C:\Program Files\Tesseract-OCR\tesseract.exe`
-- **Poppler** — required by `pdf2image` to rasterize pages.
-  - Windows default expected at `C:\poppler\Library\bin`
-
-> Both paths are configurable in `settings.py` (see [Configuration](#configuration)) — point them
-> at your own install locations on macOS/Linux or a non-default Windows path.
-
-### Install & run
+## Installation
 
 ```bash
-# 1. Clone and enter the project
-cd ProcEasy
-
-# 2. Create and activate a virtual environment
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# 3. Install dependencies
+git clone <repo-url> && cd ProcEasy
+python -m venv venv && venv\Scripts\activate      # PowerShell: venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# 4. Apply database migrations
 python manage.py migrate
+```
 
-# 5. (Optional) create an admin user
-python manage.py createsuperuser
+**Configure the key** (never commit it):
 
-# 6. Run the development server
+```powershell
+$env:GEMINI_API_KEY = "your-ai-studio-key"        # aistudio.google.com/apikey
+$env:GEMINI_MODEL   = "gemini-2.5-flash"          # optional; -pro for higher accuracy
 python manage.py runserver
 ```
 
-Then open **http://127.0.0.1:8000/** to upload an invoice, or
-**http://127.0.0.1:8000/admin/** for the admin dashboard.
+**Load the extension:** `chrome://extensions` → Developer mode → **Load unpacked** → `core/extension/`
 
----
+**Optional** (local OCR path for the browser form only — the Gemini path needs neither):
+Tesseract → `C:\Program Files\Tesseract-OCR` · Poppler → `C:\poppler\Library\bin` (override via `TESSERACT_CMD` / `POPPLER_PATH` in `settings.py`).
 
-## Configuration
-
-OCR and extraction behaviour is centralised in [`ProcEasy/settings.py`](ProcEasy/settings.py):
-
-| Setting | Default | Purpose |
-|---|---|---|
-| `OCR_BACKEND` | `"tesseract"` | Which OCR engine to use (`tesseract` or `google_docai`). |
-| `TESSERACT_CMD` | `C:\Program Files\Tesseract-OCR\tesseract.exe` | Path to the Tesseract binary. |
-| `POPPLER_PATH` | `C:\poppler\Library\bin` | Path to Poppler's `bin` (used by `pdf2image`). |
-| `OCR_DPI` | `300` | Rasterization DPI for scanned pages (accuracy vs. speed). |
-| `OCR_MIN_TEXT_CHARS` | `40` | Below this many non-space characters, a page is treated as scanned and sent to OCR. This is what stops a thin approval stamp from masking a scanned invoice. |
-
-> **Security note:** the shipped `SECRET_KEY` is a development placeholder and `DEBUG = True`.
-> Set a real secret key, disable debug, and configure `ALLOWED_HOSTS` before any deployment.
-
----
-
-## Usage walkthrough
-
-1. **Upload** a PDF invoice on the home page and submit.
-2. ProcEasy extracts the text (digital or OCR), parses it, and takes you to the
-   **verification** screen.
-3. **Review** the raw text on the left; correct the pre-filled fields on the right.
-4. **Add or remove** line items and payment terms as needed. Watch the line totals, subtotal and
-   grand total update live.
-5. Make sure the **payment terms sum to 100%** (the form won't submit otherwise).
-6. Tick **Handwritten invoice** if applicable.
-7. Click **Mark as Verified**. The PDF is saved into the dataset, the record is created, and you
-   return to the upload page — the progress counter ticks up.
-8. Reopen any saved record later at `/verify/<id>/` to re-check or amend it.
-
----
-
-## Admin
-
-The Django admin ([`core/admin.py`](core/admin.py)) lists every `InvoiceRecord` with:
-
-- **Columns:** Vendor · Cost Center · Status (Verified/Pending) · Handwritten · Created.
-- **Filters:** verified, handwritten, creation date.
-- **Search:** across the stored `parsed_data`.
-- **Ordering:** newest first.
+| Endpoint | Purpose |
+|---|---|
+| `POST /?format=json` | Gemini extraction API (extension; CSRF-exempt) |
+| `GET /` | Browser upload form (local OCR + regex parser) |
+| `/verify/` · `/verify/<pk>/` | Human verification of a draft / saved record |
+| `/admin/` | Browse, filter, and audit all records |
 
 ---
 
 ## Roadmap
 
-ProcEasy is being developed toward a full intelligent procurement assistant:
-
-- [x] Universal PDF text extraction (digital + OCR)
-- [x] Stamp-aware OCR fallback
-- [x] Rule-based invoice parser
-- [x] Human verification interface
-- [x] Verified-dataset collection
-- [ ] Cloud OCR backend (Google Document AI) for handwriting
-- [ ] Machine-learning document-understanding model trained on the verified dataset
-- [ ] Chrome extension to auto-populate ERP procurement forms
-- [ ] End-to-end procurement workflow automation
+| Phase | Name | Scope | Status |
+|:--|:--|:--|:--|
+| **1** | 🧙 **Wizard** | Floating-dot capture overlay · Gemini vision extraction · DB logging · cross-tab sync · click-to-inject cell bypass | ✅ **Shipped** |
+| **2** | 🦸 **Hero** | Full-grid autofill via Playwright (`core/automation/erp_sync.py`) · batch line-item dedup · Google Document AI handwriting backend · confidence scoring + review queue | 🚧 In progress |
+| **3** | ☁️ **SaaS** | Multi-tenant auth & orgs · Postgres + object storage · hosted API keys · usage billing · audit trails · production CORS/`DEBUG` hardening | 📋 Planned |
 
 ---
 
-## Limitations & notes
+## Layout
 
-- The rule-based parser is **best-effort pre-fill** for noisy OCR output — it is not meant to be
-  correct on its own; the human verification step is what guarantees data quality.
-- Local Tesseract does **not** read handwriting reliably; that is what the Google Document AI
-  backend seam is reserved for.
-- The default configuration targets a Windows development environment (Tesseract/Poppler paths)
-  and SQLite. Adjust `settings.py` for other platforms or a production database.
+```
+core/
+├── views.py            Gemini gateway, upload, verify, DB logging
+├── models.py           InvoiceRecord
+├── schema.py           Canonical invoice shape (drives the LLM prompt)
+├── extraction/utils.py Pluggable OCR (Tesseract | Document AI stub)
+├── parsing/            Rule-based fallback parser + regex patterns
+├── automation/         deduplicate.py · erp_sync.py (Playwright)
+└── extension/          manifest.json · content.js · popup.js
+```
+
+> **Dev-only defaults:** `DEBUG=True`, `CORS_ALLOW_ALL_ORIGINS=True`, and SQLite are convenience settings for local work — replace all three before any deployment.

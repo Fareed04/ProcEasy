@@ -173,5 +173,5 @@ AGENT_ROUTER_MODEL = os.environ.get("AGENT_ROUTER_MODEL", "anthropic/claude-opus
 #   $env:GEMINI_API_KEY = "your-AI-Studio-key"
 # GEMINI_MODEL defaults to a current, free-tier-friendly multimodal model;
 # override to e.g. "gemini-2.5-pro" for higher extraction quality.
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyAG305GRPUmNDS5znp2l5GlYSoD7gDzNR4")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
