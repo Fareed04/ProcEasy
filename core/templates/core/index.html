@@ -48,27 +48,36 @@
     </div>
     {% endif %}
 
-    <!-- Parsed structured data -->
+    <!-- Parsed structured data (shape: core/schema.py) -->
     {% if parsed_data %}
-    <div id="parsed-output" class="output-box hidden">
+    <div id="parsed-output" class="output-box{% if not extracted_text %} hidden{% endif %}">
         <h2>Parsed Invoice Data</h2>
 
         <table>
             <tbody>
-                {% if parsed_data.vendor %}
-                <tr><th>Vendor</th><td>{{ parsed_data.vendor }}</td></tr>
+                {% if parsed_data.invoice.vendor %}
+                <tr><th>Vendor</th><td>{{ parsed_data.invoice.vendor }}</td></tr>
                 {% endif %}
-                {% if parsed_data.invoice_number %}
-                <tr><th>Invoice Number</th><td>{{ parsed_data.invoice_number }}</td></tr>
+                {% if parsed_data.invoice.cost_center %}
+                <tr><th>Cost Center</th><td>{{ parsed_data.invoice.cost_center }}</td></tr>
                 {% endif %}
-                {% if parsed_data.date %}
-                <tr><th>Date</th><td>{{ parsed_data.date }}</td></tr>
+                {% if parsed_data.invoice.currency %}
+                <tr><th>Currency</th><td>{{ parsed_data.invoice.currency }}</td></tr>
                 {% endif %}
-                {% if parsed_data.payment_terms %}
-                <tr><th>Payment Terms</th><td>{{ parsed_data.payment_terms }}</td></tr>
+                {% if parsed_data.invoice.subtotal %}
+                <tr><th>Subtotal</th><td>{{ parsed_data.invoice.subtotal }}</td></tr>
                 {% endif %}
-                {% if parsed_data.total %}
-                <tr><th>Total</th><td>{{ parsed_data.total }}</td></tr>
+                {% if parsed_data.invoice.tax %}
+                <tr><th>Tax</th><td>{{ parsed_data.invoice.tax }}</td></tr>
+                {% endif %}
+                {% if parsed_data.invoice.tax_group %}
+                <tr><th>Tax Group</th><td>{{ parsed_data.invoice.tax_group }}</td></tr>
+                {% endif %}
+                {% if parsed_data.invoice.wht %}
+                <tr><th>WHT</th><td>{{ parsed_data.invoice.wht }}</td></tr>
+                {% endif %}
+                {% if parsed_data.invoice.grand_total %}
+                <tr><th>Grand Total</th><td>{{ parsed_data.invoice.grand_total }}</td></tr>
                 {% endif %}
             </tbody>
         </table>
@@ -79,19 +88,44 @@
         <table>
             <thead>
                 <tr>
+                    <th>Item</th>
                     <th>Description</th>
                     <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
+                    <th>Unit Price</th>
+                    <th>Discount</th>
+                    <th>Line Total</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in parsed_data.items %}
                 <tr>
+                    <td>{{ item.item_name }}</td>
                     <td>{{ item.description }}</td>
                     <td>{{ item.quantity }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>{{ item.total }}</td>
+                    <td>{{ item.unit_price }}</td>
+                    <td>{{ item.discount }}</td>
+                    <td>{{ item.line_total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        <!-- Payment terms -->
+        {% if parsed_data.payment_terms %}
+        <h3>Payment Terms</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for term in parsed_data.payment_terms %}
+                <tr>
+                    <td>{{ term.type }}</td>
+                    <td>{{ term.percentage }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -105,10 +139,19 @@
 <script>
 "use strict";
 
-/* Toggle between raw extracted text and the parsed data table */
+/* Toggle between raw extracted text and the parsed data table.
+   Either panel may be absent (an OCR pass can yield text but no structured
+   fields, and vice versa), so only flip what actually rendered. */
 function toggleView() {
-    document.getElementById("raw-output").classList.toggle("hidden");
-    document.getElementById("parsed-output").classList.toggle("hidden");
+    const raw = document.getElementById("raw-output");
+    const parsed = document.getElementById("parsed-output");
+
+    if (raw) {
+        raw.classList.toggle("hidden");
+    }
+    if (parsed) {
+        parsed.classList.toggle("hidden");
+    }
 }
 </script>
 

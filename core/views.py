@@ -326,7 +326,21 @@ def pdf_upload(request):
 
         return redirect("verify_draft")
 
-    return render(request, "core/index.html", _progress_counts())
+    # A staged-but-unverified draft is still in the session, so surface it.
+    # This is what makes the upload page's raw/parsed toggle meaningful on a
+    # plain GET (e.g. the user navigated back from /verify/ without submitting).
+    draft = request.session.get(DRAFT_SESSION_KEY) or {}
+
+    return render(
+        request,
+        "core/index.html",
+        {
+            "extracted_text": draft.get("extracted_text", ""),
+            "parsed_data": draft.get("parsed_data") or {},
+            "has_draft": bool(draft),
+            **_progress_counts(),
+        },
+    )
 
 
 def verify_draft(request):

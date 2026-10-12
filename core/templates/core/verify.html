@@ -100,9 +100,9 @@
                             <label for="tax_group">Tax Group</label>
                             <select id="tax_group" name="tax_group">
                                 <option value="">Select Tax Group</option>
-                                <option value="VAT 0% - FIRS">VAT 0% - FIRS</option>
-                                <option value="VAT 7.5% - FIRS">VAT 7.5% - FIRS</option>
-                                <option value="VAT 5% - FIRS">VAT 5% - FIRS</option>
+                                <option value="VAT 0% - FIRS" {% if invoice_data.invoice.tax_group == "VAT 0% - FIRS" %}selected{% endif %}>VAT 0% - FIRS</option>
+                                <option value="VAT 7.5% - FIRS" {% if invoice_data.invoice.tax_group == "VAT 7.5% - FIRS" %}selected{% endif %}>VAT 7.5% - FIRS</option>
+                                <option value="VAT 5% - FIRS" {% if invoice_data.invoice.tax_group == "VAT 5% - FIRS" %}selected{% endif %}>VAT 5% - FIRS</option>
                             </select>
                         </div>
 
@@ -110,10 +110,10 @@
                             <label for="wht">WHT</label>
                             <select id="wht" name="wht">
                                 <option value="">Select WHT</option>
-                                <option value="WHT-FIRS-2%">WHT-FIRS-2%</option>
-                                <option value="WHT-FIRS-5%">WHT-FIRS-5%</option>
-                                <option value="WHT-FIRS-10%">WHT-FIRS-10%</option>
-                                <option value="WHT-FIRS-15%">WHT-FIRS-15%</option>
+                                <option value="WHT-FIRS-2%" {% if invoice_data.invoice.wht == "WHT-FIRS-2%" %}selected{% endif %}>WHT-FIRS-2%</option>
+                                <option value="WHT-FIRS-5%" {% if invoice_data.invoice.wht == "WHT-FIRS-5%" %}selected{% endif %}>WHT-FIRS-5%</option>
+                                <option value="WHT-FIRS-10%" {% if invoice_data.invoice.wht == "WHT-FIRS-10%" %}selected{% endif %}>WHT-FIRS-10%</option>
+                                <option value="WHT-FIRS-15%" {% if invoice_data.invoice.wht == "WHT-FIRS-15%" %}selected{% endif %}>WHT-FIRS-15%</option>
                             </select>
                         </div>
                     </div>
@@ -153,7 +153,11 @@
                     </div>
 
                     <div id="payment-terms-container">
-                        {% include "core/_payment_term_row.html" %}
+                        {% for term in invoice_data.payment_terms %}
+                            {% include "core/_payment_term_row.html" %}
+                        {% empty %}
+                            {% include "core/_payment_term_row.html" %}
+                        {% endfor %}
                     </div>
 
                     <div id="payment-error" class="form-error"></div>
@@ -200,6 +204,7 @@ const paymentError = document.getElementById("payment-error");
 
 const itemRowTemplate = document.getElementById("item-row-template");
 const paymentTermTemplate = document.getElementById("payment-term-template");
+const verifyButton = form.querySelector(".verify-button");
 
 /* Totals: subtotal and grand total are derived, never typed */
 const subtotalInput = document.getElementById("subtotal");
@@ -214,10 +219,22 @@ function vatRate() {
 }
 
 /* Subtotal = sum of line totals; Grand total = subtotal after tax.
-   Exclusive tax is added on top; Inclusive/N/A leave the subtotal as-is. */
-function recalcTotals() {
+   Exclusive tax is added on top; Inclusive/N/A leave the subtotal as-is.
+
+   On first paint (`isInitial`) there may be nothing to derive from -- the
+   extraction gave us a total but no usable quantity/price pair. Deriving from
+   blanks would stamp a confident 0.00 over a real parsed figure, so in that
+   case we leave whatever the extractor produced and wait for a human edit. */
+function recalcTotals(isInitial) {
+    const lineTotals = [...document.querySelectorAll(".item-line-total")];
+    const hasDerivableData = lineTotals.some(input => input.value.trim() !== "");
+
+    if (isInitial && !hasDerivableData) {
+        return;
+    }
+
     let subtotal = 0;
-    document.querySelectorAll(".item-line-total").forEach(input => {
+    lineTotals.forEach(input => {
         subtotal += parseFloat(input.value) || 0;
     });
     subtotalInput.value = subtotal.toFixed(2);
@@ -238,16 +255,27 @@ function createPaymentTermRow() {
 }
 
 /* Item calculations: auto-fill description (until user edits it) and line total */
-function updateItem(row) {
+function updateItem(row, isInitial) {
     const name = row.querySelector(".item-name").value.trim();
     const description = row.querySelector(".item-description");
-    const quantity = parseFloat(row.querySelector(".item-quantity").value) || 0;
-    const unitPrice = parseFloat(row.querySelector(".item-unit-price").value) || 0;
-    const discount = parseFloat(row.querySelector(".item-discount").value) || 0;
+    const quantityInput = row.querySelector(".item-quantity").value.trim();
+    const priceInput = row.querySelector(".item-unit-price").value.trim();
+    const discountInput = row.querySelector(".item-discount").value.trim();
+    const quantity = parseFloat(quantityInput) || 0;
+    const unitPrice = parseFloat(priceInput) || 0;
+    const discount = parseFloat(discountInput) || 0;
     const lineTotal = row.querySelector(".item-line-total");
 
-    if (name && !description.dataset.edited) {
+    // Fill a blank description from the name, but never overwrite one that
+    // arrived with the extraction -- `value.trim()` keeps parsed text intact.
+    if (name && !description.dataset.edited && !description.value.trim()) {
         description.value = `This is the cost for ${name}`;
+    }
+
+    // Same guard for the total: recompute only when the inputs that produce it
+    // are actually present.
+    if (isInitial && !quantityInput && !priceInput && !discountInput) {
+        return;
     }
 
     // Discount is a fixed amount off each unit's price; never let it go negative.
@@ -296,9 +324,18 @@ function updatePaymentTotal() {
         total += parseFloat(input.value) || 0;
     });
 
+    const isValid = total === 100;
+
     paymentTotalDisplay.textContent = `${total}%`;
-    paymentTotalDisplay.classList.toggle("payment-total-valid", total === 100);
-    paymentTotalDisplay.classList.toggle("payment-total-invalid", total !== 100);
+    paymentTotalDisplay.classList.toggle("payment-total-valid", isValid);
+    paymentTotalDisplay.classList.toggle("payment-total-invalid", !isValid);
+
+    // Keep the commit button in step with the rule. The submit handler stays as
+    // a real guard (someone can still press Enter), but the disabled state is
+    // what tells the user *before* they try.
+    if (verifyButton) {
+        verifyButton.disabled = !isValid;
+    }
 
     return total;
 }
@@ -357,9 +394,10 @@ form.addEventListener("submit", event => {
     paymentError.textContent = "";
 });
 
-/* Initialization */
-document.querySelectorAll(".item-row").forEach(updateItem);
-recalcTotals();
+/* Initialization -- `true` marks the first paint, where parsed values are
+   authoritative until the human actually edits something. */
+document.querySelectorAll(".item-row").forEach(row => updateItem(row, true));
+recalcTotals(true);
 updatePaymentTotal();
 </script>
 

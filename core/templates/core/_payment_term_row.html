@@ -1,9 +1,16 @@
 {% comment %}
     One payment-term row.
 
-    Used in two places, both sharing this single definition:
-      - the static first row inside #payment-terms-container
+    Used in three places, all sharing this single definition:
+      - the {% for %} loop (populated with `term`)
+      - the {% empty %} branch (no `term` -> blank row)
       - the <template id="payment-term-template"> the JS clones for new rows
+
+    `term` is undefined outside the loop, so |default:'' yields a blank row.
+
+    The percentage input ships disabled because it is meaningless until a type
+    is chosen. A pre-filled row must NOT inherit that: it already has both
+    values, so the gate opens server-side instead of waiting for a change event.
 {% endcomment %}
 <div class="payment-term-row">
 
@@ -11,16 +18,18 @@
         <label>Type</label>
         <select name="payment_term_type[]" class="payment-term-type" required>
             <option value="">Select Type</option>
-            <option value="Advance payment">Advance payment</option>
-            <option value="On GR/SC">On GR/SC</option>
-            <option value="On Invoice">On Invoice</option>
+            <option value="Advance payment" {% if term.type == "Advance payment" %}selected{% endif %}>Advance payment</option>
+            <option value="On GR/SC" {% if term.type == "On GR/SC" %}selected{% endif %}>On GR/SC</option>
+            <option value="On Invoice" {% if term.type == "On Invoice" %}selected{% endif %}>On Invoice</option>
         </select>
     </div>
 
     <div class="form-group">
         <label>Payment %</label>
         <input type="number" name="payment_term_percentage[]" class="payment-term-percentage"
-               min="1" max="100" step="1" placeholder="Select Type first" disabled required>
+               value="{{ term.percentage|default:'' }}" min="1" max="100" step="1"
+               placeholder="{% if term.percentage|default:'' %}Enter percentage{% else %}Select Type first{% endif %}"
+               {% if not term.percentage|default:'' %}disabled{% endif %} required>
     </div>
 
     <button type="button" class="remove-payment-term-button">Remove</button>
