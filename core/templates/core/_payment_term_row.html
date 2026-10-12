@@ -30,8 +30,9 @@
                value="{{ term.percentage|default:'' }}" min="1" max="100" step="1"
                placeholder="{% if term.percentage|default:'' %}Enter percentage{% else %}Select Type first{% endif %}"
                {% if not term.percentage|default:'' %}disabled{% endif %} required>
+
     </div>
 
     <button type="button" class="remove-payment-term-button">Remove</button>
-
 </div>
+
